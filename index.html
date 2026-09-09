@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101010">
+  <title>NOIR STUDIO — Wear your attitude</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg: #101010;
+      --panel: #191919;
+      --text: #f4f3ee;
+      --muted: #999992;
+      --line: #ffffff20;
+      --accent: #d9ff62;
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 95px; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Manrope, sans-serif;
+    }
+    body.locked { overflow: hidden; }
+    button, input, select { font: inherit; }
+    button, a, input, select { -webkit-tap-highlight-color: transparent; }
+    button, a { touch-action: manipulation; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    button { color: inherit; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+    ::selection { background: var(--accent); color: #101010; }
+    img { display: block; width: 100%; object-fit: cover; }
+    [hidden] { display: none !important; }
+
+    .wrap { width: min(1380px, 92%); margin: auto; }
+    .muted { color: var(--muted); }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-weight: 800;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 20px #d9ff6270;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid var(--line);
+      background: #101010d9;
+      backdrop-filter: blur(20px);
+    }
+    .header-inner {
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .logo { font-size: 24px; font-weight: 800; letter-spacing: -1.5px; }
+    .logo span { color: var(--accent); }
+    nav { display: flex; gap: 30px; font-size: 13px; }
+    nav a { position: relative; padding: 10px 0; }
+    nav a::after {
+      content: "";
+      position: absolute;
+      left: 0; bottom: 3px;
+      width: 0; height: 2px;
+      background: var(--accent);
+      transition: width .3s;
+    }
+    nav a:hover::after { width: 100%; }
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 43px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      background: transparent;
+      transition: background .25s, transform .25s;
+    }
+    .icon-btn:hover { background: #ffffff12; transform: translateY(-2px); }
+    .count {
+      background: var(--accent);
+      color: #111;
+      border-radius: 50%;
+      min-width: 21px;
+      height: 21px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.08fr 1fr;
+      gap: 36px;
+      padding: 48px 0 55px;
+      align-items: center;
+    }
+    .hero-copy { padding: 25px 0; position: relative; z-index: 1; }
+    .hero h1 {
+      margin: 25px 0;
+      font-size: clamp(58px, 7.8vw, 118px);
+      line-height: .92;
+      font-weight: 800;
+      letter-spacing: -.075em;
+    }
+    .hero h1 em {
+      display: block;
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero-copy p { max-width: 370px; line-height: 1.8; font-size: 14px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      min-height: 53px;
+      padding: 15px 24px;
+      border: 1px solid transparent;
+      border-radius: 100px;
+      background: var(--accent);
+      color: #111;
+      font-size: 13px;
+      font-weight: 800;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 35px #d9ff6220; }
+    .btn.secondary { background: transparent; color: var(--text); border-color: var(--line); }
+    .hero-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+    .hero-bottom { display: flex; gap: 28px; margin-top: 44px; font-size: 11px; }
+    .hero-bottom strong { display: block; font-size: 24px; margin-bottom: 4px; }
+    .hero-visual {
+      position: relative;
+      height: 595px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #343530;
+    }
+    .hero-visual > img {
+      height: 100%;
+      object-position: center 35%;
+      filter: brightness(.8);
+      animation: heroZoom 1.5s ease both;
+    }
+    .hero-visual::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(transparent 45%, #000b);
+      pointer-events: none;
+    }
+    .image-top, .image-bottom {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .image-top { top: 25px; font-size: 11px; letter-spacing: 2px; }
+    .image-bottom { bottom: 28px; }
+    .image-bottom strong { font-size: 31px; letter-spacing: -1px; }
+    .image-bottom p { font-size: 12px; color: #ddd; }
+    .round-link {
+      width: 53px; height: 53px;
+      display: grid; place-items: center;
+      background: var(--text);
+      color: #111;
+      border-radius: 50%;
+      font-size: 25px;
+      transition: transform .3s;
+    }
+    .round-link:hover { transform: rotate(45deg); }
+    .floating-label {
+      position: absolute;
+      top: 105px;
+      right: 22px;
+      z-index: 3;
+      width: 106px;
+      height: 106px;
+      background: var(--accent);
+      color: #111;
+      border-radius: 50%;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      transform: rotate(12deg);
+      animation: float 5s ease-in-out infinite;
+    }
+    .floating-label b { font-size: 25px; }
+    @keyframes float {
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+    @keyframes heroZoom {
+      from { transform: scale(1.12); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .ticker { overflow: hidden; background: var(--accent); color: #111; padding: 17px 0; }
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: ticker 30s linear infinite;
+    }
+    .ticker-track span {
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding-right: 45px;
+    }
+    @keyframes ticker { to { transform: translateX(-50%); } }
+
+    section { padding: 82px 0; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    h2 { font-size: clamp(34px, 4vw, 56px); letter-spacing: -2px; margin: 12px 0 0; line-height: 1.08; }
+    .toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 30px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 11px 18px;
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      background: transparent;
+      font-size: 12px;
+      transition: .25s;
+    }
+    .chip.active { background: var(--text); color: #111; border-color: var(--text); }
+    .chip:hover { border-color: var(--accent); }
+    .search-sort { display: flex; gap: 8px; }
+    input, select {
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      min-width: 0;
+    }
+    input::placeholder { color: var(--muted); }
+    .search-sort input { width: 190px; }
+    select { font-size: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 18px; }
+    .product { min-width: 0; animation: cardIn .45s ease both; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(22px); } }
+    .product-image {
+      position: relative;
+      height: 350px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #272727;
+    }
+    .product-open { display: block; width: 100%; height: 100%; border: 0; padding: 0; background: none; }
+    .product-image img { height: 100%; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+    .product:hover .product-image img { transform: scale(1.07); }
+    .badge {
+      position: absolute;
+      top: 14px; left: 14px;
+      background: var(--text);
+      color: #111;
+      padding: 7px 11px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 800;
+      pointer-events: none;
+    }
+    .badge.lime { background: var(--accent); }
+    .wish {
+      position: absolute;
+      right: 12px; top: 12px;
+      border: 0;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      color: #111;
+      background: #ffffffe6;
+      font-size: 21px;
+      transition: transform .25s;
+    }
+    .wish:hover { transform: scale(1.12); }
+    .wish.active { background: var(--accent); }
+    .quick-add {
+      position: absolute;
+      bottom: 12px; left: 12px; right: 12px;
+      background: #101010e8;
+      border: 1px solid #ffffff30;
+      backdrop-filter: blur(10px);
+      padding: 13px;
+      border-radius: 12px;
+      transform: translateY(65px);
+      transition: transform .3s;
+      font-size: 12px;
+    }
+    .product:hover .quick-add, .product:focus-within .quick-add { transform: translateY(0); }
+    .product-info { display: flex; justify-content: space-between; gap: 8px; padding: 16px 2px 0; }
+    .product-info h3 { font-size: 13px; margin: 0 0 6px; }
+    .product-info p { font-size: 11px; margin: 0; color: var(--muted); }
+    .price { white-space: nowrap; font-size: 13px; font-weight: 800; }
+    .old-price { display: block; text-decoration: line-through; color: var(--muted); font-weight: 400; font-size: 10px; margin-top: 4px; }
+    .empty { padding: 70px 15px; text-align: center; color: var(--muted); grid-column: 1/-1; }
+
+    .story {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 0;
+      overflow: hidden;
+      border-radius: 28px;
+      background: var(--panel);
+    }
+    .story-photo { min-height: 460px; overflow: hidden; }
+    .story-photo img { height: 100%; filter: grayscale(1); transition: filter .7s, transform .7s; }
+    .story:hover .story-photo img { filter: grayscale(0); transform: scale(1.03); }
+    .story-copy { padding: 55px; display: flex; flex-direction: column; justify-content: center; align-items: start; }
+    .story-copy p { font-size: 14px; line-height: 1.9; margin: 25px 0; }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 38px; }
+    .feature { border-top: 1px solid var(--line); padding-top: 23px; }
+    .feature span { color: var(--accent); font-size: 24px; }
+    .feature h3 { font-size: 14px; }
+    .feature p { font-size: 12px; line-height: 1.8; color: var(--muted); }
+
+    .club {
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 65px 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: radial-gradient(ellipse at 50% 110%, #d9ff6218, transparent 65%);
+    }
+    .club h2 { max-width: 650px; margin: 0 auto; }
+    .club p { line-height: 1.8; font-size: 14px; }
+    .club .btn { margin-top: 15px; }
+    footer { padding: 35px 0; border-top: 1px solid var(--line); }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    footer p { font-size: 11px; color: var(--muted); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s, transform .8s; }
+    .reveal.visible { opacity: 1; transform: none; }
+    .progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 60; background: var(--accent); }
+
+    dialog {
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 30px;
+      width: min(460px, calc(100% - 28px));
+      max-height: 90dvh;
+      overflow: auto;
+    }
+    dialog[open] { animation: dialogIn .25s ease; }
+    dialog::backdrop { background: #000b; backdrop-filter: blur(7px); }
+    @keyframes dialogIn { from { opacity: 0; transform: translateY(20px) scale(.97); } }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .modal-head h2 { margin: 0; font-size: 26px; letter-spacing: -1px; }
+    .close { border: 1px solid var(--line); border-radius: 50%; background: transparent; width: 36px; height: 36px; flex-shrink: 0; font-size: 20px; }
+    .stack { display: grid; gap: 14px; }
+    .stack label { display: grid; gap: 8px; font-size: 12px; }
+    .fine { color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .check-label { display: flex !important; align-items: start; gap: 9px !important; line-height: 1.6; }
+    .check-label input { accent-color: var(--accent); margin-top: 4px; }
+    .full { width: 100%; }
+    #productDialog { width: min(790px, calc(100% - 28px)); }
+    .product-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+    .detail-img { height: 360px; border-radius: 15px; }
+    .detail-copy { display: flex; flex-direction: column; align-items: start; }
+    .detail-copy h3 { font-size: 25px; margin: 8px 0 14px; }
+    .detail-copy p { line-height: 1.8; font-size: 13px; color: var(--muted); }
+    .sizes { display: flex; gap: 7px; flex-wrap: wrap; margin: 10px 0 25px; }
+    .size { width: 43px; height: 42px; background: transparent; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
+    .size.active { background: var(--accent); color: #111; border-color: var(--accent); }
+
+    #cartDialog {
+      margin: 0 0 0 auto;
+      height: 100dvh;
+      max-height: 100dvh;
+      width: min(470px, 100%);
+      border-radius: 24px 0 0 24px;
+      padding: 27px;
+    }
+    #cartDialog[open] { display: flex; flex-direction: column; animation: slideIn .3s ease; }
+    @keyframes slideIn { from { transform: translateX(100%); } }
+    #cartItems { flex: 1; overflow-y: auto; }
+    .cart-row { display: grid; grid-template-columns: 75px 1fr auto; gap: 14px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .cart-row img { height: 99px; border-radius: 10px; }
+    .cart-row h3 { font-size: 13px; margin: 0 0 7px; }
+    .cart-row p { font-size: 11px; margin: 0 0 12px; color: var(--muted); }
+    .quantity { display: flex; align-items: center; gap: 13px; font-size: 12px; }
+    .quantity button { width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 6px; background: transparent; }
+    .remove { border: 0; background: transparent; color: var(--muted); font-size: 17px; padding: 0 3px; }
+    .cart-footer { padding-top: 22px; }
+    .promo { display: flex; gap: 8px; margin-bottom: 18px; }
+    .promo input { width: 100%; }
+    .promo button { padding: 10px 14px; }
+    .total-line { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 13px; }
+    .total-line.big { font-size: 22px; font-weight: 800; margin: 20px 0; }
+    #toasts { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100; width: min(400px, 90%); pointer-events: none; }
+    .toast { padding: 15px 22px; background: var(--accent); color: #111; border-radius: 13px; font-size: 13px; font-weight: 700; margin-top: 8px; box-shadow: 0 10px 40px #0005; animation: dialogIn .25s ease; }
+
+    @media (hover: none) { .quick-add { transform: none; } }
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+      .hero-visual { height: 520px; }
+      .product-image { height: 320px; }
+      nav { gap: 18px; }
+      .story-copy { padding: 35px; }
+    }
+    @media (max-width: 760px) {
+      nav { display: none; }
+      .logo { font-size: 20px; }
+      .header-inner { min-height: 70px; gap: 10px; }
+      .icon-btn { padding: 0 11px; font-size: 12px; }
+      .account-label { display: none; }
+      .hero { grid-template-columns: 1fr; gap: 25px; padding-top: 20px; }
+      .hero h1 { font-size: clamp(64px, 15vw, 100px); }
+      .hero-copy p { max-width: 450px; }
+      .hero-visual { height: 450px; }
+      .hero-bottom { margin-top: 30px; }
+      section { padding: 55px 0; }
+      .section-head { align-items: start; }
+      .section-head > p { display: none; }
+      .toolbar, .search-sort { width: 100%; }
+      .search-sort input { flex: 1; width: 100px; }
+      .grid { grid-template-columns: repeat(2, 1fr); gap: 25px 12px; }
+      .product-image { height: 280px; }
+      .product-info { flex-direction: column; }
+      .price { display: flex; gap: 8px; align-items: center; }
+      .old-price { margin: 0; }
+      .quick-add { transform: none; font-size: 11px; padding: 11px 5px; }
+      .story { grid-template-columns: 1fr; }
+      .story-photo { min-height: 0; height: 330px; }
+      .story-copy { padding: 30px; }
+      .features { grid-template-columns: 1fr; gap: 10px; }
+      .feature { padding-top: 18px; }
+      .footer-inner { flex-wrap: wrap; }
+      .product-detail { grid-template-columns: 1fr; }
+      .detail-img { height: 280px; }
+    }
+    @media (max-width: 400px) {
+      .product-image { height: 235px; }
+      .chip { padding: 10px 12px; }
+      .hero-visual { height: 380px; }
+      .header-actions { gap: 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <header>
+    <div class="wrap header-inner">
+      <a class="logo" href="#" aria-label="NOIR STUDIO — главная">NOIR<span>®</span> STUDIO</a>
+      <nav aria-label="Основная навигация">
+        <a href="#catalog">Коллекция</a>
+        <a href="#about">Философия</a>
+        <a href="#club">NOIR Club</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="favoritesBtn" aria-label="Показать избранное" aria-pressed="false">♡</button>
+        <button class="icon-btn" id="accountBtn" aria-label="Личный кабинет">
+          <span aria-hidden="true">◎</span>
+          <span class="account-label" id="accountLabel">Войти</span>
+        </button>
+        <button class="icon-btn" id="cartBtn" aria-label="Открыть корзину">
+          Bag <span class="count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="dot"></span> Independent streetwear label</div>
+          <h1>НЕ ПРОСТО<br>ОДЕЖДА.<em>ТВОЙ ГОЛОС.</em></h1>
+          <p class="muted">Для тех, кто не вписывается в рамки. Свободные силуэты, чистые линии и характер в каждой детали.</p>
+          <div class="hero-buttons">
+            <a class="btn" href="#catalog">Смотреть коллекцию <span>↗</span></a>
+            <a class="btn secondary" href="#about">О бренде</a>
+          </div>
+          <div class="hero-bottom">
+            <div><strong>01 / 26</strong><span class="muted">НОВЫЙ ДРОП</span></div>
+            <div><strong>XS—XL</strong><span class="muted">ТВОЯ ПОСАДКА</span></div>
+            <div><strong>100%</strong><span class="muted">ТВОЙ ХАРАКТЕР</span></div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <img
+            src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1100&q=85"
+            alt="Городской образ новой коллекции"
+            fetchpriority="high">
+          <div class="image-top"><span>DROP 001 / URBAN FORMS</span><span>© NOIR</span></div>
+          <div class="floating-label">NEW SEASON<b>NO RULES</b>JUST YOU</div>
+          <div class="image-bottom">
+            <div><strong>Outside the ordinary.</strong><p>Твой город. Твой ритм. Твои правила.</p></div>
+            <a class="round-link" href="#catalog" aria-label="Перейти к коллекции">↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticker" aria-label="Новая коллекция. Свободные силуэты. NOIR STUDIO.">
+      <div class="ticker-track" aria-hidden="true">
+        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
+        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
+        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
+        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
+      </div>
+    </div>
+
+    <section id="catalog" class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> The essentials</div>
+          <h2>Выбери свой вайб.</h2>
+        </div>
+        <p class="muted" style="font-size:12px">Меньше лишнего. Больше тебя.</p>
+      </div>
+
+      <div class="toolbar">
+        <div class="filters" id="filters" aria-label="Категории товаров">
+          <button class="chip active" data-category="all" aria-pressed="true">Всё</button>
+          <button class="chip" data-category="tees" aria-pressed="false">Футболки</button>
+          <button class="chip" data-category="hoodies" aria-pressed="false">Худи</button>
+          <button class="chip" data-category="outerwear" aria-pressed="false">Верхняя одежда</button>
+          <button class="chip" data-category="accessories" aria-pressed="false">Аксессуары</button>
+        </div>
+        <div class="search-sort">
+          <input id="search" type="search" placeholder="Найти своё…" aria-label="Поиск товаров">
+          <select id="sort" aria-label="Сортировка">
+            <option value="default">По умолчанию</option>
+            <option value="low">Сначала дешевле</option>
+            <option value="high">Сначала дороже</option>
+            <option value="new">Сначала новинки</option>
+          </select>
+        </div>
+      </div>
+
+      <p id="resultsCount" class="fine" aria-live="polite"></p>
+      <div class="grid" id="products"></div>
+    </section>
+
+    <section id="about" class="wrap" style="padding-top:0">
+      <div class="story reveal">
+        <div class="story-photo">
+          <img loading="lazy"
+            src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1000&q=80"
+            alt="Вещи на рейле в пространстве бренда">
+        </div>
+        <div class="story-copy">
+          <div class="eyebrow"><span class="dot"></span> Beyond clothing</div>
+          <h2>Не следуй трендам.<br>Создавай свои.</h2>
+          <p class="muted">NOIR — это пространство самовыражения. Мы соединяем эстетику большого города и комфорт вещей, которые хочется носить каждый день. Без громких логотипов. Без чужих правил.</p>
+          <a class="btn secondary" href="#catalog">Найти свою вещь ↗</a>
+        </div>
+      </div>
+
+      <div class="features">
+        <div class="feature reveal"><span>↗</span><h3>Свобода в движении</h3><p>Расслабленные силуэты для насыщенных дней и спонтанных планов.</p></div>
+        <div class="feature reveal"><span>✳</span><h3>Внимание к деталям</h3><p>Выразительные фактуры и лаконичные акценты вместо визуального шума.</p></div>
+        <div class="feature reveal"><span>◎</span><h3>Собери свой образ</h3><p>Добавляй вещи в избранное, сочетай оттенки и находи свой ритм.</p></div>
+      </div>
+    </section>
+
+    <section id="club" class="wrap" style="padding-top:0">
+      <div class="club reveal">
+        <p class="eyebrow" style="justify-content:center;color:var(--accent)">YOU ARE ONE OF US</p>
+        <h2>Свой среди тех,<br>кто выбирает себя.</h2>
+        <p class="muted">Загляни в NOIR Club и попробуй промокод <b style="color:var(--text)">FIRST10</b><br>на скидку 10% в демокорзине.</p>
+        <button class="btn" id="joinBtn">Присоединиться к клубу ↗</button>
+        <p class="fine">Демопрофиль — без рассылок и передачи данных на сервер.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <a class="logo" href="#">NOIR<span>®</span> STUDIO</a>
+      <p>© <span id="year"></span> NOIR STUDIO · Демонстрационный магазин</p>
+      <a href="#catalog" style="font-size:12px">Back to collection ↑</a>
+    </div>
+  </footer>
+
+  <dialog id="authDialog" aria-labelledby="authTitle">
+    <div class="modal-head">
+      <h2 id="authTitle">Welcome to NOIR.</h2>
+      <button class="close" data-close aria-label="Закрыть">×</button>
+    </div>
+
+    <form id="authForm" class="stack">
+      <p class="fine">Создай демопрофиль. Это не защищённый аккаунт: имя и email сохранятся только в этом браузере. Пароль не требуется.</p>
+      <label>Как тебя зовут?
+        <input name="name" placeholder="Твоё имя" required minlength="2" maxlength="40" autocomplete="given-name">
+      </label>
+      <label>Email
+        <input name="email" type="email" placeholder="you@example.com" required maxlength="120" autocomplete="email">
+      </label>
+      <label class="check-label">
+        <input type="checkbox" required>
+        <span>Разрешаю сохранить имя и email локально на этом устройстве для демонстрации.</span>
+      </label>
+      <button class="btn full" type="submit">Создать демопрофиль ↗</button>
+    </form>
+
+    <div id="profileView" hidden>
+      <p id="profileGreeting"></p>
+      <p id="profileEmail" class="muted"></p>
+      <p class="fine">Твой промокод: FIRST10. Избранное и корзина сохраняются отдельно в этом браузере.</p>
+      <button class="btn secondary full" id="logoutBtn">Удалить демопрофиль</button>
+    </div>
+  </dialog>
+
+  <dialog id="productDialog" aria-labelledby="productTitle">
+    <div class="modal-head">
+      <h2 id="productTitle">Детали вещи</h2>
+      <button class="close" data-close aria-label="Закрыть">×</button>
+    </div>
+    <div id="productDetail"></div>
+  </dialog>
+
+  <dialog id="cartDialog" aria-labelledby="cartTitle">
+    <div class="modal-head">
+      <h2 id="cartTitle">Твоя корзина.</h2>
+      <button class="close" data-close aria-label="Закрыть">×</button>
+    </div>
+
+    <div id="cartItems"></div>
+
+    <div class="cart-footer">
+      <form class="promo" id="promoForm">
+        <input id="promoInput" placeholder="Промокод" aria-label="Промокод" maxlength="30">
+        <button class="btn secondary" type="submit">OK</button>
+      </form>
+      <div class="total-line"><span class="muted">Товары</span><span id="subtotal">0 ₽</span></div>
+      <div class="total-line"><span class="muted">Скидка</span><span id="discount">0 ₽</span></div>
+      <div class="total-line big"><span>Итого</span><span id="total">0 ₽</span></div>
+      <button class="btn full" id="checkoutBtn">Проверить демозаказ ↗</button>
+      <p class="fine">Оплата не подключена. Доставка не рассчитана. Заказ не отправляется продавцу.</p>
+    </div>
+  </dialog>
+
+  <dialog id="checkoutDialog" aria-labelledby="checkoutTitle">
+    <div class="modal-head">
+      <h2 id="checkoutTitle">Твой образ собран ✳</h2>
+      <button class="close" data-close aria-label="Закрыть">×</button>
+    </div>
+    <p id="checkoutSummary"></p>
+    <p class="fine">Это демонстрация: заказ не создан, деньги не списаны. Корзина сохранена. Для реальных покупок нужно подключить сервер, доставку и платёжный сервис.</p>
+    <button class="btn full" data-close>Продолжить смотреть</button>
+  </dialog>
+
+  <div id="toasts" role="status" aria-live="polite"></div>
+
+  <script>
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+    const money = value => new Intl.NumberFormat('ru-RU', {
+      style: 'currency', currency: 'RUB', maximumFractionDigits: 0
+    }).format(value);
+
+    // Замените изображения, названия, цены и описания на свои.
+    const image = (id, width = 700) =>
+      `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
+
+    const products = [
+      {
+        id: 1, name: 'Essential Tee', category: 'tees',
+        color: 'Молочный', price: 2900, old: 3500, badge: 'BESTSELLER',
+        photo: 'photo-1521572163474-6864f9cf17ab',
+        sizes: ['XS', 'S', 'M', 'L', 'XL'],
+        description: 'Базовая футболка свободного кроя. Чистый силуэт, который легко вписать в любой образ.'
+      },
+      {
+        id: 2, name: 'Everyday Hoodie', category: 'hoodies',
+        color: 'Графит', price: 6900, badge: 'NEW',
+        photo: 'photo-1556821840-3a63f95609a7',
+        sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Объёмное худи для прохладных вечеров. Расслабленная посадка и лаконичный дизайн.'
+      },
+      {
+        id: 3, name: 'Urban Denim', category: 'outerwear',
+        color: 'Винтажный синий', price: 8900, badge: 'NEW',
+        photo: 'photo-1543076447-215ad9ba6923',
+        sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Джинсовая куртка с характером. Носи поверх футболки или собирай многослойные сочетания.'
+      },
+      {
+        id: 4, name: 'City Backpack', category: 'accessories',
+        color: 'Песочный', price: 4900, badge: '',
+        photo: 'photo-1553062407-98eeb64c6a62',
+        sizes: ['ONE'],
+        description: 'Городской рюкзак для повседневных вещей. Минималистичная форма без лишних деталей.'
+      },
+      {
+        id: 5, name: 'Statement Tee', category: 'tees',
+        color: 'Белый', price: 3400, badge: 'NEW',
+        photo: 'photo-1503341504253-dff4815485f1',
+        sizes: ['XS', 'S', 'M', 'L'],
+        description: 'Футболка для образов с настроением. Сочетай с любимым денимом и выразительными аксессуарами.'
+      },
+      {
+        id: 6, name: 'Off-Duty Hoodie', category: 'hoodies',
+        color: 'Чёрный', price: 7200, old: 8500, badge: 'SPECIAL',
+        photo: 'photo-1578681994506-b8f463449011',
+        sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Худи для дней без расписания. Свободный крой и универсальный оттенок.'
+      },
+      {
+        id: 7, name: 'Nomad Jacket', category: 'outerwear',
+        color: 'Тёмный', price: 12900, badge: '',
+        photo: 'photo-1551028719-00167b16eac5',
+        sizes: ['S', 'M', 'L'],
+        description: 'Акцентная куртка для городских маршрутов. Выразительная фактура и уверенный силуэт.'
+      },
+      {
+        id: 8, name: 'Daily Cap', category: 'accessories',
+        color: 'Чёрный', price: 2400, badge: 'NEW',
+        photo: 'photo-1588850561407-ed78c282e89b',
+        sizes: ['ONE'],
+        description: 'Последний штрих повседневного образа. Кепка с регулируемой посадкой.'
+      }
+    ];
+
+    const findProduct = id => products.find(p => p.id === Number(id));
+
+    function read(key, fallback) {
+      try {
+        const value = localStorage.getItem('noir_' + key);
+        return value === null ? fallback : JSON.parse(value);
+      } catch { return fallback; }
+    }
+
+    let storageWarningShown = false;
+    function save(key, value) {
+      try {
+        localStorage.setItem('noir_' + key, JSON.stringify(value));
+      } catch {
+        if (!storageWarningShown) {
+          toast('Хранилище недоступно: изменения останутся только до перезагрузки.');
+          storageWarningShown = true;
+        }
+      }
+    }
+
+    // Проверяем сохранённые данные перед использованием.
+    const savedCart = read('cart', []);
+    let cart = Array.isArray(savedCart) ? savedCart.filter(item => {
+      if (!item || typeof item !== 'object') return false;
+      const product = findProduct(item.id);
+      return product && product.sizes.includes(item.size) &&
+        Number.isInteger(item.qty) && item.qty > 0 && item.qty <= 99;
+    }).map(item => ({ id: Number(item.id), size: item.size, qty: item.qty })) : [];
+
+    const savedFavorites = read('favorites', []);
+    let favorites = Array.isArray(savedFavorites)
+      ? [...new Set(savedFavorites.filter(id => Number.isInteger(id) && findProduct(id)))]
+      : [];
+
+    const savedUser = read('user', null);
+    let user = savedUser && typeof savedUser.name === 'string' &&
+      typeof savedUser.email === 'string'
+      ? { name: savedUser.name.slice(0, 40), email: savedUser.email.slice(0, 120) }
+      : null;
+
+    let promoApplied = read('promo', false) === true;
+    let category = 'all';
+    let onlyFavorites = false;
+    let selectedProduct = null;
+    let selectedSize = null;
+
+    function toast(message) {
+      const element = document.createElement('div');
+      element.className = 'toast';
+      element.textContent = message;
+      $('#toasts').append(element);
+      setTimeout(() => element.remove(), 3800);
+    }
+
+    function openDialog(id) {
+      const dialog = document.getElementById(id);
+      if (!dialog.open) dialog.showModal();
+      document.body.classList.add('locked');
+    }
+
+    function closeDialog(dialog) {
+      dialog.close();
+      if (!$('dialog[open]')) document.body.classList.remove('locked');
+    }
+
+    $$('dialog').forEach(dialog => {
+      dialog.addEventListener('click', event => {
+        if (event.target.closest('[data-close]')) closeDialog(dialog);
+
+        // Закрытие при клике за пределами окна, но не по его внутренним отступам.
+        if (event.target === dialog) {
+          const rect = dialog.getBoundingClientRect();
+          if (event.clientX < rect.left || event.clientX > rect.right ||
+              event.clientY < rect.top || event.clientY > rect.bottom) {
+            closeDialog(dialog);
+          }
+        }
+      });
+      dialog.addEventListener('close', () => {
+        if (!$('dialog[open]')) document.body.classList.remove('locked');
+      });
+    });
+
+    function renderProducts() {
+      const query = $('#search').value.trim().toLocaleLowerCase('ru');
+      let list = products.filter(product =>
+        (category === 'all' || product.category === category) &&
+        (!onlyFavorites || favorites.includes(product.id)) &&
+        `${product.name} ${product.color} ${product.description}`
+          .toLocaleLowerCase('ru').includes(query)
+      );
+
+      const sort = $('#sort').value;
+      if (sort === 'low') list.sort((a, b) => a.price - b.price);
+      if (sort === 'high') list.sort((a, b) => b.price - a.price);
+      if (sort === 'new') list.sort((a, b) => Number(b.badge === 'NEW') - Number(a.badge === 'NEW'));
+
+      $('#resultsCount').textContent =
+        `${onlyFavorites ? 'Избранное · ' : ''}Найдено: ${list.length}`;
+
+      // В HTML-шаблоны попадают только статические данные каталога.
+      $('#products').innerHTML = list.length ? list.map((product, index) => `
+        <article class="product" style="animation-delay:${index * 35}ms">
+          <div class="product-image">
+            <button class="product-open" data-open="${product.id}" aria-label="Открыть ${product.name}">
+              <img src="${image(product.photo)}" alt="${product.name}, ${product.color}" loading="lazy">
+            </button>
+            ${product.badge ? `<span class="badge ${product.badge === 'NEW' ? 'lime' : ''}">${product.badge}</span>` : ''}
+            <button class="wish ${favorites.includes(product.id) ? 'active' : ''}"
+              data-wish="${product.id}"
+              aria-label="${favorites.includes(product.id) ? 'Убрать из избранного' : 'В избранное'}: ${product.name}"
+              aria-pressed="${favorites.includes(product.id)}">
+              ${favorites.includes(product.id) ? '♥' : '♡'}
+            </button>
+            <button class="quick-add" data-open="${product.id}">Выбрать размер <span aria-hidden="true">＋</span></button>
+          </div>
+          <div class="product-info">
+            <div><h3>${product.name}</h3><p>${product.color} / Unisex</p></div>
+            <div class="price">${money(product.price)}
+              ${product.old ? `<span class="old-price">${money(product.old)}</span>` : ''}
+            </div>
+          </div>
+        </article>
+      `).join('') : '<div class="empty">Ничего не нашлось. Попробуй другую категорию или поисковый запрос.</div>';
+    }
+
+    $('#products').addEventListener('click', event => {
+      const wishButton = event.target.closest('[data-wish]');
+      if (wishButton) {
+        const id = Number(wishButton.dataset.wish);
+        const existed = favorites.includes(id);
+        favorites = existed ? favorites.filter(value => value !== id) : [...favorites, id];
+        save('favorites', favorites);
+        renderProducts();
+        $(`[data-wish="${id}"]`)?.focus({ preventScroll: true });
+        toast(existed ? 'Убрано из избранного' : 'Добавлено в избранное ♥');
+        return;
+      }
+      const openButton = event.target.closest('[data-open]');
+      if (openButton) showProduct(Number(openButton.dataset.open));
+    });
+
+    $('#filters').addEventListener('click', event => {
+      const button = event.target.closest('[data-category]');
+      if (!button) return;
+      category = button.dataset.category;
+      $$('#filters .chip').forEach(chip => {
+        const active = chip === button;
+        chip.classList.toggle('active', active);
+        chip.setAttribute('aria-pressed', String(active));
+      });
+      renderProducts();
+    });
+
+    $('#search').addEventListener('input', renderProducts);
+    $('#sort').addEventListener('change', renderProducts);
+
+    $('#favoritesBtn').addEventListener('click', () => {
+      onlyFavorites = !onlyFavorites;
+      $('#favoritesBtn').textContent = onlyFavorites ? '♥' : '♡';
+      $('#favoritesBtn').setAttribute('aria-pressed', String(onlyFavorites));
+      $('#favoritesBtn').setAttribute('aria-label',
+        onlyFavorites ? 'Показать все товары' : 'Показать избранное');
+      renderProducts();
+      $('#catalog').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function showProduct(id) {
+      selectedProduct = findProduct(id);
+      if (!selectedProduct) return;
+      selectedSize = null;
+      const p = selectedProduct;
+
+      $('#productDetail').innerHTML = `
+        <div class="product-detail">
+          <img class="detail-img" src="${image(p.photo)}" alt="${p.name}">
+          <div class="detail-copy">
+            <span class="eyebrow" style="color:var(--accent)">NOIR / COLLECTION 001</span>
+            <h3>${p.name}</h3>
+            <strong style="font-size:23px">${money(p.price)}</strong>
+            <p>${p.description}</p>
+            <span class="fine">Цвет: ${p.color}</span>
+            <span class="fine" style="margin-top:14px">Выбери размер</span>
+            <div class="sizes" role="group" aria-label="Размер">
+              ${p.sizes.map(size => `<button class="size" data-size="${size}" aria-pressed="false">${size}</button>`).join('')}
+            </div>
+            <button class="btn full" id="addToCart" disabled>Выбери размер</button>
+          </div>
+        </div>`;
+      openDialog('productDialog');
+    }
+
+    $('#productDetail').addEventListener('click', event => {
+      const sizeButton = event.target.closest('[data-size]');
+      if (sizeButton) {
+        selectedSize = sizeButton.dataset.size;
+        $$('.size', $('#productDetail')).forEach(button => {
+          const active = button === sizeButton;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+        $('#addToCart').disabled = false;
+        $('#addToCart').textContent = 'Добавить в корзину ＋';
+      }
+
+      if (event.target.closest('#addToCart') && selectedProduct && selectedSize) {
+        const existing = cart.find(item =>
+          item.id === selectedProduct.id && item.size === selectedSize);
+
+        if (existing && existing.qty >= 99) {
+          toast('Не больше 99 единиц одного размера.');
+          return;
+        }
+        if (existing) existing.qty++;
+        else cart.push({ id: selectedProduct.id, size: selectedSize, qty: 1 });
+
+        persistCart();
+        closeDialog($('#productDialog'));
+        toast(`${selectedProduct.name} · ${selectedSize} — в корзине`);
+      }
+    });
+
+    function totals() {
+      const subtotal = cart.reduce((sum, item) => sum + findProduct(item.id).price * item.qty, 0);
+      const discount = promoApplied ? Math.round(subtotal * .1) : 0;
+      return { subtotal, discount, total: subtotal - discount };
+    }
+
+    function persistCart() {
+      save('cart', cart);
+      renderCart();
+    }
+
+    function renderCart() {
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+      $('#cartCount').textContent = count;
+      $('#cartBtn').setAttribute('aria-label', `Открыть корзину. Товаров: ${count}`);
+
+      $('#cartItems').innerHTML = cart.length ? cart.map((item, index) => {
+        const p = findProduct(item.id);
+        return `
+          <div class="cart-row">
+            <img src="${image(p.photo, 200)}" alt="${p.name}">
+            <div>
+              <h3>${p.name}</h3>
+              <p>${item.size} / ${p.color}</p>
+              <div class="quantity">
+                <button data-qty="-1" data-index="${index}" aria-label="Уменьшить количество ${p.name}">−</button>
+                <span>${item.qty}</span>
+                <button data-qty="1" data-index="${index}" aria-label="Увеличить количество ${p.name}" ${item.qty >= 99 ? 'disabled' : ''}>+</button>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <button class="remove" data-remove="${index}" aria-label="Удалить ${p.name}">×</button>
+              <div class="price" style="margin-top:25px">${money(p.price * item.qty)}</div>
+            </div>
+          </div>`;
+      }).join('') : '<div class="empty">Пока пусто.<br><br>Твой следующий любимый образ — в каталоге.</div>';
+
+      const values = totals();
+      $('#subtotal').textContent = money(values.subtotal);
+      $('#discount').textContent = '−' + money(values.discount);
+      $('#total').textContent = money(values.total);
+      $('#checkoutBtn').disabled = cart.length === 0;
+      $('#promoInput').placeholder = promoApplied ? 'FIRST10 применён ✓' : 'Промокод';
+    }
+
+    $('#cartItems').addEventListener('click', event => {
+      const quantityButton = event.target.closest('[data-qty]');
+      const removeButton = event.target.closest('[data-remove]');
+
+      if (quantityButton) {
+        const index = Number(quantityButton.dataset.index);
+        const item = cart[index];
+        if (!item) return;
+        item.qty = Math.min(99, item.qty + Number(quantityButton.dataset.qty));
+        if (item.qty <= 0) cart.splice(index, 1);
+        persistCart();
+        const next = $(`[data-index="${Math.min(index, cart.length - 1)}"][data-qty="${quantityButton.dataset.qty}"]`, $('#cartItems'));
+        (next || $('#cartDialog .close')).focus({ preventScroll: true });
+      }
+
+      if (removeButton) {
+        const index = Number(removeButton.dataset.remove);
+        cart.splice(index, 1);
+        persistCart();
+        const next = $(`[data-remove="${Math.min(index, cart.length - 1)}"]`, $('#cartItems'));
+        (next || $('#cartDialog .close')).focus({ preventScroll: true });
+      }
+    });
+
+    $('#cartBtn').addEventListener('click', () => {
+      renderCart();
+      openDialog('cartDialog');
+    });
+
+    $('#promoForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const code = $('#promoInput').value.trim().toUpperCase();
+      if (code === 'FIRST10') {
+        promoApplied = true;
+        save('promo', true);
+        $('#promoInput').value = '';
+        renderCart();
+        toast('FIRST10 применён: скидка 10%');
+      } else toast('Промокод не найден. Попробуй FIRST10');
+    });
+
+    $('#checkoutBtn').addEventListener('click', () => {
+      if (!cart.length) return;
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+      $('#checkoutSummary').textContent =
+        `Товаров: ${count}. Стоимость со скидкой: ${money(totals().total)}, без доставки.`;
+      closeDialog($('#cartDialog'));
+      openDialog('checkoutDialog');
+    });
+
+    function updateProfile() {
+      $('#accountLabel').textContent = user ? user.name : 'Войти';
+      $('#authForm').hidden = Boolean(user);
+      $('#profileView').hidden = !user;
+      $('#authTitle').textContent = user ? 'Ты в NOIR Club.' : 'Welcome to NOIR.';
+      if (user) {
+        // Пользовательские данные выводятся текстом, а не HTML.
+        $('#profileGreeting').textContent = `Привет, ${user.name}!`;
+        $('#profileEmail').textContent = user.email;
+      }
+    }
+
+    function showAccount() {
+      updateProfile();
+      openDialog('authDialog');
+    }
+    $('#accountBtn').addEventListener('click', showAccount);
+    $('#joinBtn').addEventListener('click', showAccount);
+
+    $('#authForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const name = form.elements.name.value.trim();
+      if (name.length < 2) {
+        toast('Введи имя: минимум 2 символа.');
+        form.elements.name.focus();
+        return;
+      }
+
+      user = { name, email: form.elements.email.value.trim() };
+      save('user', user);
+      updateProfile();
+      form.reset();
+      closeDialog($('#authDialog'));
+      toast(`Добро пожаловать, ${user.name} ✳`);
+    });
+
+    $('#logoutBtn').addEventListener('click', () => {
+      user = null;
+      save('user', null);
+      updateProfile();
+      $('#authForm input').focus();
+      toast('Демопрофиль удалён');
+    });
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: .12 });
+      $$('.reveal').forEach(element => observer.observe(element));
+    } else {
+      $$('.reveal').forEach(element => element.classList.add('visible'));
+    }
+
+    let scrollScheduled = false;
+    function updateProgress() {
+      const distance = document.documentElement.scrollHeight - innerHeight;
+      $('#progress').style.width = `${distance > 0 ? Math.min(100, scrollY / distance * 100) : 0}%`;
+      scrollScheduled = false;
+    }
+    window.addEventListener('scroll', () => {
+      if (!scrollScheduled) {
+        scrollScheduled = true;
+        requestAnimationFrame(updateProgress);
+      }
+    }, { passive: true });
+    window.addEventListener('resize', updateProgress);
+
+    $('#year').textContent = new Date().getFullYear();
+    renderProducts();
+    renderCart();
+    updateProfile();
+    updateProgress();
+  </script>
+</body>
+</html>
