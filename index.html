@@ -3,498 +3,706 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101010">
+  <meta name="theme-color" content="#0b0b0b">
   <title>NOIR STUDIO — Wear your attitude</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+    @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 
     :root {
-      --bg: #101010;
-      --panel: #191919;
+      --bg: #0b0b0b;
+      --panel: #161616;
+      --panel-2: #1f1f1f;
       --text: #f4f3ee;
-      --muted: #999992;
-      --line: #ffffff20;
+      --muted: #8f8f88;
+      --line: #ffffff1c;
       --accent: #d9ff62;
-      --radius: 22px;
+      --accent-2: #8b5cf6;
+      --radius: 24px;
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --ease-io: cubic-bezier(.77, 0, .18, 1);
+      --display: Unbounded, Manrope, sans-serif;
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 95px; }
+    html { scroll-behavior: smooth; scroll-padding-top: 90px; }
     body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
       font-family: Manrope, sans-serif;
+      overflow-x: clip;
     }
-    body.locked { overflow: hidden; }
+    body.locked, body.loading { overflow: hidden; }
     button, input, select { font: inherit; }
     button, a, input, select { -webkit-tap-highlight-color: transparent; }
-    button, a { touch-action: manipulation; }
-    button { cursor: pointer; }
+    button { cursor: pointer; color: inherit; }
     a { color: inherit; text-decoration: none; }
-    button { color: inherit; }
     button:disabled { opacity: .4; cursor: not-allowed; }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
-    ::selection { background: var(--accent); color: #101010; }
+    ::selection { background: var(--accent); color: #111; }
     img { display: block; width: 100%; object-fit: cover; }
     [hidden] { display: none !important; }
+    h1, h2, h3 { margin: 0; }
 
     .wrap { width: min(1380px, 92%); margin: auto; }
     .muted { color: var(--muted); }
+    .accent { color: var(--accent); }
     .eyebrow {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 2px;
-      font-weight: 800;
+      display: flex; align-items: center; gap: 10px;
+      text-transform: uppercase; font-size: 11px; letter-spacing: 2.5px; font-weight: 800;
     }
     .dot {
-      width: 8px;
-      height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 20px #d9ff6270;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 18px var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 50% { transform: scale(1.6); opacity: .5; } }
+
+    /* ───────── Grain ───────── */
+    .grain {
+      position: fixed; inset: -50%; z-index: 90; pointer-events: none; opacity: .06;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: grain 1s steps(6) infinite;
+    }
+    @keyframes grain {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-5%, 3%); }
+      40% { transform: translate(4%, -6%); }
+      60% { transform: translate(-3%, 8%); }
+      80% { transform: translate(7%, 2%); }
     }
 
+    /* ───────── Loader ───────── */
+    #loader {
+      position: fixed; inset: 0; z-index: 300;
+      display: grid; place-items: center;
+      background: var(--accent); color: #0b0b0b;
+      clip-path: inset(0 0 0 0);
+      transition: clip-path 1s var(--ease-io);
+      animation: loaderFallback 0s 6s forwards;
+    }
+    #loader.done { clip-path: inset(0 0 100% 0); }
+    @keyframes loaderFallback { to { clip-path: inset(0 0 100% 0); visibility: hidden; } }
+    .loader-inner { width: min(560px, 84vw); }
+    .loader-word {
+      font-family: var(--display); font-weight: 900;
+      font-size: clamp(54px, 13vw, 150px); letter-spacing: -.06em; line-height: .9;
+      overflow: hidden; display: flex;
+    }
+    .loader-word span { display: inline-block; animation: loaderChar .9s var(--ease) both; }
+    @keyframes loaderChar { from { transform: translateY(105%); } }
+    .loader-row {
+      display: flex; justify-content: space-between; align-items: end;
+      margin-top: 18px; font-weight: 800; font-size: 12px; letter-spacing: 2px;
+    }
+    #loaderCount { font-family: var(--display); font-size: 42px; letter-spacing: -2px; }
+    .loader-bar { height: 3px; background: #0b0b0b22; margin-top: 14px; overflow: hidden; }
+    .loader-bar i { display: block; height: 100%; width: 0; background: #0b0b0b; }
+
+    /* ───────── Cursor ───────── */
+    .cursor-dot, .cursor-ring {
+      position: fixed; top: 0; left: 0; z-index: 250; pointer-events: none;
+      border-radius: 50%; display: none;
+    }
+    body.has-cursor .cursor-dot, body.has-cursor .cursor-ring { display: grid; }
+    body.has-cursor, body.has-cursor a, body.has-cursor button { cursor: none; }
+    body.has-cursor input, body.has-cursor select { cursor: auto; }
+    body.has-cursor.locked, body.has-cursor.locked * { cursor: auto; }
+    body.locked .cursor-dot, body.locked .cursor-ring { opacity: 0; }
+    .cursor-dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--accent); }
+    .cursor-ring {
+      width: 40px; height: 40px; margin: -20px 0 0 -20px;
+      border: 1px solid #ffffff70; place-items: center;
+      font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #0b0b0b;
+      transition: width .4s var(--ease), height .4s var(--ease), margin .4s var(--ease),
+                  background .3s, border-color .3s, opacity .3s;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring span { opacity: 0; transition: opacity .2s; }
+    .cursor-ring.hover { width: 64px; height: 64px; margin: -32px 0 0 -32px; background: #fff; border-color: #fff; }
+    .cursor-ring.label {
+      width: 96px; height: 96px; margin: -48px 0 0 -48px;
+      background: var(--accent); border-color: var(--accent); mix-blend-mode: normal;
+    }
+    .cursor-ring.label span { opacity: 1; }
+    .cursor-ring.down { transform-origin: center; scale: .8; }
+
+    /* ───────── Header ───────── */
+    .progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 100%; z-index: 60;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transform-origin: left; transform: scaleX(0);
+    }
     header {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      border-bottom: 1px solid var(--line);
-      background: #101010d9;
-      backdrop-filter: blur(20px);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      transition: transform .6s var(--ease), background .4s, border-color .4s;
+      border-bottom: 1px solid transparent;
     }
-    .header-inner {
-      min-height: 82px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-    }
-    .logo { font-size: 24px; font-weight: 800; letter-spacing: -1.5px; }
-    .logo span { color: var(--accent); }
-    nav { display: flex; gap: 30px; font-size: 13px; }
-    nav a { position: relative; padding: 10px 0; }
+    header.scrolled { background: #0b0b0bcc; backdrop-filter: blur(18px); border-color: var(--line); }
+    header.hide { transform: translateY(-100%); }
+    .header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .logo { white-space: nowrap; font-family: var(--display); font-size: 20px; font-weight: 900; letter-spacing: -1px; }
+    .logo span { color: var(--accent); display: inline-block; animation: spin 6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    nav { display: flex; gap: 32px; font-size: 13px; font-weight: 600; }
+    nav a { position: relative; padding: 10px 0; font-variant-numeric: tabular-nums; }
     nav a::after {
-      content: "";
-      position: absolute;
-      left: 0; bottom: 3px;
-      width: 0; height: 2px;
-      background: var(--accent);
-      transition: width .3s;
+      content: ""; position: absolute; left: 0; bottom: 3px; width: 100%; height: 2px;
+      background: var(--accent); transform: scaleX(0); transform-origin: right;
+      transition: transform .5s var(--ease);
     }
-    nav a:hover::after { width: 100%; }
+    nav a:hover::after { transform: scaleX(1); transform-origin: left; }
     .header-actions { display: flex; gap: 8px; }
     .icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      min-height: 43px;
-      padding: 0 14px;
-      border: 1px solid var(--line);
-      border-radius: 100px;
-      background: transparent;
-      transition: background .25s, transform .25s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      min-height: 43px; padding: 0 15px;
+      border: 1px solid var(--line); border-radius: 100px; background: #ffffff06;
+      transition: background .3s, border-color .3s;
     }
-    .icon-btn:hover { background: #ffffff12; transform: translateY(-2px); }
+    .icon-btn:hover { background: #ffffff14; border-color: #ffffff40; }
     .count {
-      background: var(--accent);
-      color: #111;
-      border-radius: 50%;
-      min-width: 21px;
-      height: 21px;
-      display: grid;
-      place-items: center;
-      font-size: 11px;
-      font-weight: 800;
+      background: var(--accent); color: #111; border-radius: 50%;
+      min-width: 21px; height: 21px; display: grid; place-items: center;
+      font-size: 11px; font-weight: 800;
     }
+    .count.bump { animation: bump .6s var(--ease); }
+    @keyframes bump { 30% { transform: scale(1.8) rotate(-12deg); } }
 
-    .hero {
-      position: relative;
-      display: grid;
-      grid-template-columns: 1.08fr 1fr;
-      gap: 36px;
-      padding: 48px 0 55px;
-      align-items: center;
-    }
-    .hero-copy { padding: 25px 0; position: relative; z-index: 1; }
-    .hero h1 {
-      margin: 25px 0;
-      font-size: clamp(58px, 7.8vw, 118px);
-      line-height: .92;
-      font-weight: 800;
-      letter-spacing: -.075em;
-    }
-    .hero h1 em {
-      display: block;
-      font-style: normal;
-      color: var(--accent);
-    }
-    .hero-copy p { max-width: 370px; line-height: 1.8; font-size: 14px; }
+    /* ───────── Buttons ───────── */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      min-height: 53px;
-      padding: 15px 24px;
-      border: 1px solid transparent;
-      border-radius: 100px;
-      background: var(--accent);
-      color: #111;
-      font-size: 13px;
-      font-weight: 800;
-      transition: transform .25s, box-shadow .25s;
+      position: relative; overflow: hidden; isolation: isolate;
+      display: inline-flex; align-items: center; justify-content: center; gap: 18px;
+      min-height: 54px; padding: 15px 26px;
+      border: 1px solid transparent; border-radius: 100px;
+      background: var(--accent); color: #111;
+      font-size: 13px; font-weight: 800; letter-spacing: .2px;
+      transition: transform .5s var(--ease), box-shadow .4s, color .4s;
     }
-    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 35px #d9ff6220; }
+    .btn::before {
+      content: ""; position: absolute; inset: 0; z-index: -1;
+      background: var(--text); border-radius: inherit;
+      transform: translateY(101%); transition: transform .5s var(--ease);
+    }
+    .btn:hover:not(:disabled)::before { transform: none; }
+    .btn:hover:not(:disabled) { box-shadow: 0 14px 40px #d9ff6230; }
+    .btn .arrow { display: inline-block; transition: transform .5s var(--ease); }
+    .btn:hover .arrow { transform: rotate(45deg); }
     .btn.secondary { background: transparent; color: var(--text); border-color: var(--line); }
-    .hero-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-    .hero-bottom { display: flex; gap: 28px; margin-top: 44px; font-size: 11px; }
-    .hero-bottom strong { display: block; font-size: 24px; margin-bottom: 4px; }
+    .btn.secondary:hover:not(:disabled) { color: #111; }
+    .btn.full { width: 100%; }
+    .ripple {
+      position: absolute; border-radius: 50%; pointer-events: none; z-index: -1;
+      background: #ffffff80; transform: scale(0); animation: ripple .7s ease-out forwards;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+    [data-magnetic] { transition: transform .6s var(--ease); will-change: transform; }
+
+    /* ───────── Hero ───────── */
+    .hero {
+      position: relative; min-height: 100svh;
+      display: flex; align-items: center; padding: 110px 0 60px; overflow: hidden;
+    }
+    #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .9; }
+    .hero-blob {
+      position: absolute; width: 46vw; aspect-ratio: 1; border-radius: 50%;
+      filter: blur(90px); opacity: .22; pointer-events: none;
+      animation: blob 18s ease-in-out infinite alternate;
+    }
+    .hero-blob.a { background: var(--accent); top: -14vw; left: -10vw; }
+    .hero-blob.b { background: var(--accent-2); bottom: -20vw; right: -6vw; animation-delay: -9s; }
+    @keyframes blob {
+      33% { transform: translate(12vw, 8vw) scale(1.2); }
+      66% { transform: translate(-6vw, 14vw) scale(.85); }
+      100% { transform: translate(8vw, -4vw) scale(1.1); }
+    }
+    .hero-grid {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1.15fr .85fr; gap: 50px; align-items: center;
+    }
+    .hero h1 {
+      margin: 26px 0;
+      font-family: var(--display); font-weight: 900;
+      font-size: clamp(40px, 6.2vw, 106px); line-height: .9; letter-spacing: -.06em;
+    }
+    .line { display: block; overflow: hidden; padding: .02em 0 .06em; }
+    .word { display: inline-block; white-space: nowrap; }
+    .char {
+      display: inline-block; transform: translateY(115%) rotate(10deg);
+      transition: transform 1.1s var(--ease); transition-delay: calc(var(--ci) * 32ms + 150ms);
+    }
+    .ready .char { transform: none; }
+    .hero h1 .line:last-child {
+      color: transparent; -webkit-text-stroke: 1.5px var(--accent);
+      background: linear-gradient(90deg, var(--accent) 0 50%, transparent 50%) 100% 0 / 200% 100% no-repeat;
+      -webkit-background-clip: text; background-clip: text;
+      transition: background-position 1.6s var(--ease-io) 1.4s;
+    }
+    .ready .hero h1 .line:last-child { background-position: 0 0; }
+    .fade-up {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 1s var(--ease), transform 1s var(--ease);
+      transition-delay: var(--d, .8s);
+    }
+    .ready .fade-up { opacity: 1; transform: none; }
+    .hero-copy p { max-width: 400px; line-height: 1.85; font-size: 14px; }
+    .hero-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .hero-bottom { display: flex; gap: 34px; margin-top: 48px; font-size: 11px; letter-spacing: 1px; }
+    .hero-bottom strong { display: block; font-family: var(--display); font-size: 24px; margin-bottom: 5px; letter-spacing: -1px; }
+
+    .hero-visual-wrap { position: relative; perspective: 1200px; }
     .hero-visual {
-      position: relative;
-      height: 595px;
-      border-radius: 28px;
-      overflow: hidden;
-      background: #343530;
+      position: relative; height: min(640px, 72vh); border-radius: 28px; overflow: hidden;
+      background: #222; transform-style: preserve-3d;
+      clip-path: inset(100% 0 0 0 round 28px);
+      transition: clip-path 1.5s var(--ease-io) .35s, transform .8s var(--ease);
+      transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
     }
-    .hero-visual > img {
-      height: 100%;
-      object-position: center 35%;
-      filter: brightness(.8);
-      animation: heroZoom 1.5s ease both;
+    .ready .hero-visual { clip-path: inset(0 0 0 0 round 28px); }
+    .hero-visual img {
+      height: 100%; object-position: center 35%; filter: brightness(.82) contrast(1.05);
+      transform: scale(1.35) translate(var(--px, 0), var(--py, 0));
+      transition: transform 2.2s var(--ease) .35s;
     }
+    .ready .hero-visual img { transform: scale(1.12) translate(var(--px, 0), var(--py, 0)); }
     .hero-visual::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(transparent 45%, #000b);
-      pointer-events: none;
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(transparent 45%, #000c);
     }
     .image-top, .image-bottom {
-      position: absolute;
-      left: 28px;
-      right: 28px;
-      z-index: 2;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      position: absolute; left: 26px; right: 26px; z-index: 2;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    .image-top { top: 25px; font-size: 11px; letter-spacing: 2px; }
-    .image-bottom { bottom: 28px; }
-    .image-bottom strong { font-size: 31px; letter-spacing: -1px; }
-    .image-bottom p { font-size: 12px; color: #ddd; }
+    .image-top { top: 24px; font-size: 11px; letter-spacing: 2px; font-weight: 700; }
+    .image-bottom { bottom: 26px; gap: 14px; }
+    .image-bottom strong { font-family: var(--display); font-size: clamp(20px, 2.4vw, 30px); letter-spacing: -1px; }
+    .image-bottom p { font-size: 12px; color: #ddd; margin: 6px 0 0; }
     .round-link {
-      width: 53px; height: 53px;
+      flex-shrink: 0; width: 56px; height: 56px; display: grid; place-items: center;
+      background: var(--text); color: #111; border-radius: 50%; font-size: 24px;
+      transition: background .3s, transform .5s var(--ease);
+    }
+    .round-link:hover { background: var(--accent); transform: rotate(45deg) scale(1.1); }
+    .badge-spin {
+      position: absolute; z-index: 3; left: -58px; top: 46%;
+      width: 132px; height: 132px; border-radius: 50%;
       display: grid; place-items: center;
-      background: var(--text);
-      color: #111;
-      border-radius: 50%;
-      font-size: 25px;
-      transition: transform .3s;
+      background: var(--accent); color: #111;
+      box-shadow: 0 20px 60px #0008;
+      opacity: 0; scale: .3; transition: opacity .8s var(--ease) 1.4s, scale 1s var(--ease) 1.4s;
     }
-    .round-link:hover { transform: rotate(45deg); }
-    .floating-label {
-      position: absolute;
-      top: 105px;
-      right: 22px;
-      z-index: 3;
-      width: 106px;
-      height: 106px;
-      background: var(--accent);
-      color: #111;
-      border-radius: 50%;
-      display: grid;
-      place-content: center;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 800;
-      transform: rotate(12deg);
-      animation: float 5s ease-in-out infinite;
+    .ready .badge-spin { opacity: 1; scale: 1; }
+    .badge-spin svg { position: absolute; inset: 0; animation: spin 14s linear infinite; }
+    .badge-spin text { font-size: 10.5px; font-weight: 800; letter-spacing: 3.3px; fill: #111; }
+    .badge-spin b { font-size: 28px; }
+    .scroll-hint {
+      position: absolute; z-index: 2; bottom: 26px; left: 50%; translate: -50% 0;
+      font-size: 10px; letter-spacing: 3px; display: grid; justify-items: center; gap: 10px;
+      color: var(--muted);
     }
-    .floating-label b { font-size: 25px; }
-    @keyframes float {
-      50% { transform: translateY(-12px) rotate(2deg); }
+    .scroll-hint i { width: 1px; height: 46px; background: var(--line); position: relative; overflow: hidden; }
+    .scroll-hint i::after {
+      content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 40%;
+      background: var(--accent); animation: drip 1.8s var(--ease-io) infinite;
     }
-    @keyframes heroZoom {
-      from { transform: scale(1.12); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
+    @keyframes drip { from { transform: translateY(-100%); } to { transform: translateY(260%); } }
 
-    .ticker { overflow: hidden; background: var(--accent); color: #111; padding: 17px 0; }
-    .ticker-track {
-      display: flex;
-      width: max-content;
-      animation: ticker 30s linear infinite;
+    /* ───────── Marquee ───────── */
+    .marquees { padding: 40px 0; overflow: hidden; }
+    .marquee { overflow: hidden; padding: 16px 0; white-space: nowrap; }
+    .marquee.one { background: var(--accent); color: #111; transform: rotate(-2.5deg); width: 110%; margin-left: -5%; }
+    .marquee.two { background: var(--text); color: #111; transform: rotate(2deg) translateY(-14px); width: 110%; margin-left: -5%; }
+    .marquee-track { display: inline-flex; will-change: transform; }
+    .marquee span {
+      font-family: var(--display); font-weight: 900; font-size: clamp(22px, 3.4vw, 46px);
+      letter-spacing: -1px; padding-right: 30px;
     }
-    .ticker-track span {
-      white-space: nowrap;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      padding-right: 45px;
-    }
-    @keyframes ticker { to { transform: translateX(-50%); } }
+    .marquee .star { display: inline-block; animation: spin 4s linear infinite; }
 
-    section { padding: 82px 0; }
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 20px;
-      margin-bottom: 30px;
+    /* ───────── Sections ───────── */
+    section { padding: 120px 0; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 44px; }
+    .section-head h2, .big-h2 {
+      font-family: var(--display); font-weight: 700;
+      font-size: clamp(36px, 5.2vw, 78px); letter-spacing: -.055em; line-height: .95; margin-top: 18px;
     }
-    h2 { font-size: clamp(34px, 4vw, 56px); letter-spacing: -2px; margin: 12px 0 0; line-height: 1.08; }
+    .reveal { opacity: 0; transform: translateY(60px); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-words .w { display: inline-block; overflow: hidden; vertical-align: top; }
+    .reveal-words .w > span {
+      display: inline-block; transform: translateY(110%);
+      transition: transform 1s var(--ease); transition-delay: calc(var(--wi) * 60ms);
+    }
+    .reveal-words.visible .w > span { transform: none; }
+
+    /* ───────── Catalog ───────── */
     .toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 30px; }
-    .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filters { position: relative; display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
-      padding: 11px 18px;
-      border: 1px solid var(--line);
-      border-radius: 100px;
-      background: transparent;
-      font-size: 12px;
-      transition: .25s;
+      position: relative; z-index: 1;
+      border: 1px solid var(--line); background: transparent; border-radius: 100px;
+      padding: 11px 18px; font-size: 12px; font-weight: 700;
+      transition: color .4s, border-color .3s;
     }
-    .chip.active { background: var(--text); color: #111; border-color: var(--text); }
     .chip:hover { border-color: var(--accent); }
+    .chip.active { color: #111; border-color: transparent; }
+    .chip-pill {
+      position: absolute; z-index: 0; top: 0; left: 0; border-radius: 100px; background: var(--accent);
+      transition: transform .6s var(--ease), width .6s var(--ease), height .6s var(--ease);
+    }
     .search-sort { display: flex; gap: 8px; }
-    input, select {
-      color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px 14px;
-      min-width: 0;
+    .search-sort input, .search-sort select, .promo input, .stack input {
+      min-height: 44px; padding: 0 16px; border-radius: 100px;
+      border: 1px solid var(--line); background: var(--panel); color: var(--text);
+      transition: border-color .3s, box-shadow .3s;
     }
-    input::placeholder { color: var(--muted); }
-    .search-sort input { width: 190px; }
-    select { font-size: 12px; }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 18px; }
-    .product { min-width: 0; animation: cardIn .45s ease both; }
-    @keyframes cardIn { from { opacity: 0; transform: translateY(22px); } }
+    .search-sort input:focus, .promo input:focus, .stack input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px #d9ff6218; outline: none; }
+    .search-sort input { width: 200px; }
+    .fine { color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px 18px; }
+    .product { min-width: 0; opacity: 0; transform: translateY(70px); transition: opacity .9s var(--ease), transform 1.1s var(--ease); transition-delay: calc(var(--i) * 90ms); }
+    .product.in { opacity: 1; transform: none; }
     .product-image {
-      position: relative;
-      height: 350px;
-      border-radius: 18px;
-      overflow: hidden;
-      background: #272727;
+      position: relative; aspect-ratio: 3/4; border-radius: 20px; overflow: hidden; background: var(--panel);
+      transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+      transition: transform .6s var(--ease), box-shadow .5s;
+      transform-style: preserve-3d;
     }
+    .product-image:hover { box-shadow: 0 30px 60px #0009; }
+    .product-image.tilting { transition: transform .12s linear, box-shadow .5s; }
+    .product-image::before {
+      content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), #ffffff40, transparent 50%);
+      opacity: 0; transition: opacity .4s; mix-blend-mode: overlay;
+    }
+    .product-image:hover::before { opacity: 1; }
     .product-open { display: block; width: 100%; height: 100%; border: 0; padding: 0; background: none; }
-    .product-image img { height: 100%; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
-    .product:hover .product-image img { transform: scale(1.07); }
+    .product-image img {
+      height: 100%; clip-path: inset(100% 0 0 0); scale: 1.3;
+      transition: clip-path 1.2s var(--ease-io), scale 1.6s var(--ease), filter .6s;
+      transition-delay: calc(var(--i) * 90ms + 100ms);
+    }
+    .product.in .product-image img { clip-path: inset(0 0 0 0); scale: 1; }
+    .product:hover .product-image img { scale: 1.08; transition-delay: 0s; }
     .badge {
-      position: absolute;
-      top: 14px; left: 14px;
-      background: var(--text);
-      color: #111;
-      padding: 7px 11px;
-      border-radius: 100px;
-      font-size: 10px;
-      font-weight: 800;
-      pointer-events: none;
+      position: absolute; top: 14px; left: 14px; z-index: 3;
+      padding: 6px 10px; border-radius: 100px;
+      background: #111; color: var(--text); font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
     }
-    .badge.lime { background: var(--accent); }
+    .badge.lime { background: var(--accent); color: #111; }
     .wish {
-      position: absolute;
-      right: 12px; top: 12px;
-      border: 0;
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      color: #111;
-      background: #ffffffe6;
-      font-size: 21px;
-      transition: transform .25s;
+      position: absolute; top: 12px; right: 12px; z-index: 3;
+      width: 40px; height: 40px; border-radius: 50%; border: 0;
+      background: #0b0b0bb0; backdrop-filter: blur(8px); font-size: 17px;
+      transition: transform .4s var(--ease), background .3s;
     }
-    .wish:hover { transform: scale(1.12); }
-    .wish.active { background: var(--accent); }
+    .wish:hover { transform: scale(1.15); }
+    .wish.active { background: var(--accent); color: #111; }
+    .wish.pop { animation: heartPop .6s var(--ease); }
+    @keyframes heartPop { 30% { transform: scale(1.5) rotate(-15deg); } 60% { transform: scale(.9); } }
     .quick-add {
-      position: absolute;
-      bottom: 12px; left: 12px; right: 12px;
-      background: #101010e8;
-      border: 1px solid #ffffff30;
-      backdrop-filter: blur(10px);
-      padding: 13px;
-      border-radius: 12px;
-      transform: translateY(65px);
-      transition: transform .3s;
-      font-size: 12px;
+      position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3;
+      min-height: 46px; border: 0; border-radius: 100px;
+      background: var(--text); color: #111; font-size: 12px; font-weight: 800;
+      display: flex; justify-content: space-between; align-items: center; padding: 0 18px;
+      transform: translateY(160%); transition: transform .6s var(--ease), background .3s;
     }
-    .product:hover .quick-add, .product:focus-within .quick-add { transform: translateY(0); }
+    .quick-add:hover { background: var(--accent); }
+    .product:hover .quick-add, .product:focus-within .quick-add { transform: none; }
     .product-info { display: flex; justify-content: space-between; gap: 8px; padding: 16px 2px 0; }
-    .product-info h3 { font-size: 13px; margin: 0 0 6px; }
+    .product-info h3 { font-size: 14px; margin: 0 0 6px; }
     .product-info p { font-size: 11px; margin: 0; color: var(--muted); }
-    .price { white-space: nowrap; font-size: 13px; font-weight: 800; }
+    .price { white-space: nowrap; font-size: 14px; font-weight: 800; }
     .old-price { display: block; text-decoration: line-through; color: var(--muted); font-weight: 400; font-size: 10px; margin-top: 4px; }
     .empty { padding: 70px 15px; text-align: center; color: var(--muted); grid-column: 1/-1; }
 
+    /* ───────── Lookbook (horizontal) ───────── */
+    .lookbook { position: relative; padding: 0; }
+    .lookbook-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; align-items: center; }
+    .lookbook-track { display: flex; gap: 3vw; padding: 0 4vw; will-change: transform; align-items: center; }
+    .look-intro { flex: 0 0 auto; width: min(560px, 82vw); }
+    .look-intro h2 { font-family: var(--display); font-size: clamp(48px, 8vw, 130px); letter-spacing: -.07em; line-height: .88; margin: 20px 0; }
+    .look-intro h2 span { color: transparent; -webkit-text-stroke: 1.5px var(--text); }
+    .look {
+      position: relative; flex: 0 0 auto; width: min(460px, 78vw); height: min(620px, 72vh);
+      border-radius: 26px; overflow: hidden; background: var(--panel);
+    }
+    .look:nth-child(odd) { margin-top: 10vh; }
+    .look:nth-child(even) { margin-bottom: 10vh; }
+    .look img { height: 100%; width: 130%; max-width: none; transform: translateX(var(--lx, 0%)); filter: grayscale(.4); transition: filter .6s; }
+    .look:hover img { filter: none; }
+    .look::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 50%, #000d); pointer-events: none; }
+    .look-num {
+      position: absolute; top: 14px; left: 20px; z-index: 2;
+      font-family: var(--display); font-weight: 900; font-size: 70px; letter-spacing: -4px;
+      color: transparent; -webkit-text-stroke: 1px #ffffffaa;
+    }
+    .look-info { position: absolute; left: 22px; right: 22px; bottom: 22px; z-index: 2; display: flex; justify-content: space-between; align-items: end; gap: 10px; }
+    .look-info h3 { font-family: var(--display); font-size: 26px; letter-spacing: -1px; }
+    .look-info p { margin: 6px 0 0; font-size: 12px; color: #ccc; }
+    .look-outro { flex: 0 0 auto; width: min(420px, 80vw); text-align: center; }
+    .look-outro .big-h2 { margin-bottom: 26px; }
+    .look-progress { position: absolute; left: 4vw; right: 4vw; bottom: 30px; height: 2px; background: var(--line); }
+    .look-progress i { display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); }
+
+    /* ───────── Manifest ───────── */
+    .manifest p {
+      font-family: var(--display); font-weight: 700;
+      font-size: clamp(28px, 4.6vw, 70px); line-height: 1.12; letter-spacing: -.045em;
+      margin: 30px 0 0;
+    }
+    .manifest .mw { opacity: .12; transition: opacity .25s, color .25s; }
+    .manifest .mw.hl { color: var(--accent); }
+
+    /* ───────── Story ───────── */
     .story {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      padding: 0;
-      overflow: hidden;
-      border-radius: 28px;
-      background: var(--panel);
+      display: grid; grid-template-columns: 1fr 1fr; overflow: hidden;
+      border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line);
     }
-    .story-photo { min-height: 460px; overflow: hidden; }
-    .story-photo img { height: 100%; filter: grayscale(1); transition: filter .7s, transform .7s; }
-    .story:hover .story-photo img { filter: grayscale(0); transform: scale(1.03); }
-    .story-copy { padding: 55px; display: flex; flex-direction: column; justify-content: center; align-items: start; }
-    .story-copy p { font-size: 14px; line-height: 1.9; margin: 25px 0; }
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 38px; }
-    .feature { border-top: 1px solid var(--line); padding-top: 23px; }
-    .feature span { color: var(--accent); font-size: 24px; }
-    .feature h3 { font-size: 14px; }
-    .feature p { font-size: 12px; line-height: 1.8; color: var(--muted); }
+    .story-photo { min-height: 560px; overflow: hidden; position: relative; }
+    .story-photo img { position: absolute; inset: -18% 0; height: 136%; filter: grayscale(1); transition: filter 1s; will-change: transform; }
+    .story:hover .story-photo img { filter: grayscale(0); }
+    .story-copy { padding: 60px; display: flex; flex-direction: column; justify-content: center; align-items: start; }
+    .story-copy p { font-size: 14px; line-height: 1.9; margin: 26px 0; }
 
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 18px; }
+    .stat { border: 1px solid var(--line); border-radius: var(--radius); padding: 30px 26px; background: var(--panel); position: relative; overflow: hidden; }
+    .stat strong { display: block; font-family: var(--display); font-size: clamp(40px, 5vw, 72px); letter-spacing: -.06em; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .stat span { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .stat::after {
+      content: ""; position: absolute; inset: auto -30% -60% auto; width: 160px; height: 160px; border-radius: 50%;
+      background: var(--accent); filter: blur(70px); opacity: .0; transition: opacity .5s;
+    }
+    .stat:hover::after { opacity: .3; }
+
+    /* ───────── Stacking cards ───────── */
+    .stack-cards { display: grid; gap: 30px; margin-top: 50px; }
+    .s-card {
+      position: sticky; top: calc(100px + var(--n) * 26px);
+      min-height: 420px; border-radius: 30px; padding: 46px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: stretch;
+      transform-origin: center top; will-change: transform, filter;
+      border: 1px solid var(--line); box-shadow: 0 -20px 60px #0007;
+    }
+    .s-card:nth-child(1) { background: var(--panel); }
+    .s-card:nth-child(2) { background: var(--accent); color: #111; }
+    .s-card:nth-child(3) { background: #e9e7df; color: #111; }
+    .s-card:nth-child(4) { background: var(--accent-2); }
+    .s-card .num { font-family: var(--display); font-size: clamp(70px, 10vw, 150px); font-weight: 900; letter-spacing: -.08em; line-height: .8; opacity: .9; }
+    .s-card h3 { font-family: var(--display); font-size: clamp(26px, 3vw, 44px); letter-spacing: -.04em; margin: 22px 0 14px; }
+    .s-card p { line-height: 1.8; font-size: 14px; max-width: 380px; opacity: .8; }
+    .s-card .s-img { border-radius: 20px; overflow: hidden; min-height: 300px; }
+    .s-card .s-img img { height: 100%; }
+    .s-card .s-copy { display: flex; flex-direction: column; justify-content: space-between; }
+
+    /* ───────── Club ───────── */
+    .club-border {
+      position: relative; padding: 2px; border-radius: 34px;
+      background: conic-gradient(from var(--angle), transparent 0 60%, var(--accent) 75%, var(--accent-2) 88%, transparent);
+      animation: rotateBorder 5s linear infinite;
+    }
+    @keyframes rotateBorder { to { --angle: 360deg; } }
     .club {
-      position: relative;
-      overflow: hidden;
-      text-align: center;
-      padding: 65px 24px;
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background: radial-gradient(ellipse at 50% 110%, #d9ff6218, transparent 65%);
+      position: relative; overflow: hidden; text-align: center;
+      border-radius: 32px; padding: 100px 30px; background: #0f0f0f;
     }
-    .club h2 { max-width: 650px; margin: 0 auto; }
+    .club::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), #d9ff6226, transparent 60%);
+    }
+    .club > * { position: relative; }
+    .club h2 { max-width: 760px; margin: 18px auto; }
     .club p { line-height: 1.8; font-size: 14px; }
-    .club .btn { margin-top: 15px; }
-    footer { padding: 35px 0; border-top: 1px solid var(--line); }
-    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    footer p { font-size: 11px; color: var(--muted); }
+    .club .btn { margin-top: 18px; }
+    .club .fine { margin-top: 18px; }
 
-    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s, transform .8s; }
-    .reveal.visible { opacity: 1; transform: none; }
-    .progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 60; background: var(--accent); }
-
-    dialog {
-      color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 30px;
-      width: min(460px, calc(100% - 28px));
-      max-height: 90dvh;
-      overflow: auto;
+    /* ───────── Footer ───────── */
+    footer { padding: 70px 0 30px; overflow: hidden; border-top: 1px solid var(--line); }
+    .footer-giant {
+      font-family: var(--display); font-weight: 900; text-align: center; white-space: nowrap;
+      font-size: 17.5vw; letter-spacing: -.07em; line-height: .8; margin: 10px 0 40px;
+      display: flex; justify-content: center; overflow: hidden;
     }
-    dialog[open] { animation: dialogIn .25s ease; }
-    dialog::backdrop { background: #000b; backdrop-filter: blur(7px); }
-    @keyframes dialogIn { from { opacity: 0; transform: translateY(20px) scale(.97); } }
+    .footer-giant span {
+      display: inline-block; transform: translateY(100%);
+      transition: transform 1.2s var(--ease); transition-delay: calc(var(--ci) * 60ms);
+      background: linear-gradient(180deg, var(--text), #555); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .footer-giant span:hover { background: var(--accent); -webkit-background-clip: text; background-clip: text; }
+    .footer-giant.visible span { transform: none; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 12px; color: var(--muted); }
+
+    /* ───────── Dialogs ───────── */
+    dialog {
+      width: min(520px, calc(100% - 28px)); max-height: calc(100% - 40px);
+      padding: 30px; border: 1px solid var(--line); border-radius: 26px;
+      background: var(--panel); color: var(--text);
+    }
+    dialog[open] { animation: dialogIn .7s var(--ease); }
+    dialog::backdrop { background: #000c; backdrop-filter: blur(10px); animation: fadeIn .5s ease; }
+    @keyframes dialogIn { from { opacity: 0; transform: translateY(60px) scale(.9) rotateX(12deg); } }
+    @keyframes fadeIn { from { opacity: 0; } }
     .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
-    .modal-head h2 { margin: 0; font-size: 26px; letter-spacing: -1px; }
-    .close { border: 1px solid var(--line); border-radius: 50%; background: transparent; width: 36px; height: 36px; flex-shrink: 0; font-size: 20px; }
+    .modal-head h2 { font-family: var(--display); font-size: 24px; letter-spacing: -1px; }
+    .close {
+      border: 1px solid var(--line); border-radius: 50%; background: transparent;
+      width: 40px; height: 40px; flex-shrink: 0; font-size: 20px;
+      transition: transform .5s var(--ease), background .3s;
+    }
+    .close:hover { transform: rotate(90deg); background: #ffffff14; }
     .stack { display: grid; gap: 14px; }
     .stack label { display: grid; gap: 8px; font-size: 12px; }
-    .fine { color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .stack input { border-radius: 14px; }
     .check-label { display: flex !important; align-items: start; gap: 9px !important; line-height: 1.6; }
-    .check-label input { accent-color: var(--accent); margin-top: 4px; }
-    .full { width: 100%; }
-    #productDialog { width: min(790px, calc(100% - 28px)); }
-    .product-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-    .detail-img { height: 360px; border-radius: 15px; }
+    .check-label input { accent-color: var(--accent); margin-top: 4px; min-height: 0; }
+    #productDialog { width: min(860px, calc(100% - 28px)); }
+    .product-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .detail-img-wrap { border-radius: 18px; overflow: hidden; }
+    .detail-img { height: 400px; animation: detailImg 1.2s var(--ease); }
+    @keyframes detailImg { from { transform: scale(1.4); clip-path: inset(0 0 100% 0); } }
     .detail-copy { display: flex; flex-direction: column; align-items: start; }
-    .detail-copy h3 { font-size: 25px; margin: 8px 0 14px; }
+    .detail-copy > * { animation: detailIn .8s var(--ease) both; }
+    .detail-copy > *:nth-child(2) { animation-delay: .05s; }
+    .detail-copy > *:nth-child(3) { animation-delay: .1s; }
+    .detail-copy > *:nth-child(4) { animation-delay: .15s; }
+    .detail-copy > *:nth-child(n+5) { animation-delay: .2s; }
+    @keyframes detailIn { from { opacity: 0; transform: translateX(30px); } }
+    .detail-copy h3 { font-family: var(--display); font-size: 28px; letter-spacing: -1px; margin: 10px 0 14px; }
     .detail-copy p { line-height: 1.8; font-size: 13px; color: var(--muted); }
     .sizes { display: flex; gap: 7px; flex-wrap: wrap; margin: 10px 0 25px; }
-    .size { width: 43px; height: 42px; background: transparent; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
-    .size.active { background: var(--accent); color: #111; border-color: var(--accent); }
+    .size {
+      width: 46px; height: 44px; background: transparent; border: 1px solid var(--line); border-radius: 10px; font-size: 12px; font-weight: 700;
+      transition: transform .4s var(--ease), background .3s, border-color .3s;
+    }
+    .size:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .size.active { background: var(--accent); color: #111; border-color: var(--accent); transform: translateY(-3px) scale(1.06); }
 
     #cartDialog {
-      margin: 0 0 0 auto;
-      height: 100dvh;
-      max-height: 100dvh;
-      width: min(470px, 100%);
-      border-radius: 24px 0 0 24px;
-      padding: 27px;
+      width: min(460px, 100%); height: 100%; max-height: 100%;
+      margin: 0 0 0 auto; border-radius: 26px 0 0 26px; border-right: 0;
     }
-    #cartDialog[open] { display: flex; flex-direction: column; animation: slideIn .3s ease; }
+    #cartDialog[open] { display: flex; flex-direction: column; animation: slideIn .7s var(--ease); }
     @keyframes slideIn { from { transform: translateX(100%); } }
-    #cartItems { flex: 1; overflow-y: auto; }
-    .cart-row { display: grid; grid-template-columns: 75px 1fr auto; gap: 14px; padding: 20px 0; border-bottom: 1px solid var(--line); }
-    .cart-row img { height: 99px; border-radius: 10px; }
-    .cart-row h3 { font-size: 13px; margin: 0 0 7px; }
-    .cart-row p { font-size: 11px; margin: 0 0 12px; color: var(--muted); }
-    .quantity { display: flex; align-items: center; gap: 13px; font-size: 12px; }
-    .quantity button { width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 6px; background: transparent; }
-    .remove { border: 0; background: transparent; color: var(--muted); font-size: 17px; padding: 0 3px; }
-    .cart-footer { padding-top: 22px; }
-    .promo { display: flex; gap: 8px; margin-bottom: 18px; }
-    .promo input { width: 100%; }
-    .promo button { padding: 10px 14px; }
-    .total-line { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 13px; }
-    .total-line.big { font-size: 22px; font-weight: 800; margin: 20px 0; }
-    #toasts { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100; width: min(400px, 90%); pointer-events: none; }
-    .toast { padding: 15px 22px; background: var(--accent); color: #111; border-radius: 13px; font-size: 13px; font-weight: 700; margin-top: 8px; box-shadow: 0 10px 40px #0005; animation: dialogIn .25s ease; }
+    #cartItems { flex: 1; overflow: auto; }
+    .cart-row {
+      display: grid; grid-template-columns: 78px 1fr auto; gap: 14px; align-items: start;
+      padding: 14px 0; border-bottom: 1px solid var(--line);
+      animation: detailIn .6s var(--ease) both; animation-delay: calc(var(--i) * 60ms);
+    }
+    .cart-row img { height: 96px; border-radius: 12px; }
+    .cart-row h3 { font-size: 14px; }
+    .cart-row p { font-size: 11px; color: var(--muted); margin: 5px 0 10px; }
+    .quantity { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 100px; padding: 3px; }
+    .quantity button { width: 28px; height: 28px; border: 0; border-radius: 50%; background: #ffffff10; }
+    .quantity span { min-width: 18px; text-align: center; font-size: 12px; font-weight: 800; }
+    .remove { border: 0; background: none; font-size: 20px; color: var(--muted); transition: color .3s, transform .4s var(--ease); }
+    .remove:hover { color: var(--text); transform: rotate(90deg); }
+    .cart-footer { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; }
+    .promo { display: flex; gap: 8px; }
+    .promo input { flex: 1; min-width: 0; }
+    .promo .btn { min-height: 44px; padding: 0 20px; }
+    .total-line { display: flex; justify-content: space-between; font-size: 13px; }
+    .total-line.big { font-family: var(--display); font-size: 20px; margin: 4px 0 8px; }
 
-    @media (hover: none) { .quick-add { transform: none; } }
-    @media (max-width: 1100px) {
-      .grid { grid-template-columns: repeat(3, 1fr); }
+    /* Toasts & FX live in the top layer (popover) so they appear above open dialogs. */
+    #toasts {
+      position: fixed; inset: auto auto 24px 50%; translate: -50% 0; margin: 0; padding: 0;
+      border: 0; background: none; overflow: visible; display: grid; gap: 8px; justify-items: center;
+      pointer-events: none; z-index: 400;
+    }
+    #toasts:not(:popover-open):not(.no-popover) { display: none; }
+    .toast {
+      padding: 14px 22px; border-radius: 100px; background: var(--text); color: #111;
+      font-size: 13px; font-weight: 700; box-shadow: 0 20px 50px #0008;
+      animation: toastIn .6s var(--ease), toastOut .5s ease 3.3s forwards;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(40px) scale(.8); } }
+    @keyframes toastOut { to { opacity: 0; transform: translateY(20px) scale(.9); } }
+    #fx {
+      position: fixed; inset: 0; width: 100vw; height: 100vh; margin: 0; padding: 0; border: 0;
+      background: transparent; pointer-events: none; z-index: 350; max-width: none; max-height: none;
+    }
+    #fx:not(:popover-open):not(.no-popover) { display: none; }
+
+    /* ───────── Responsive ───────── */
+    @media (max-width: 1050px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-grid { grid-template-columns: 1fr; }
       .hero-visual { height: 520px; }
-      .product-image { height: 320px; }
-      nav { gap: 18px; }
-      .story-copy { padding: 35px; }
+      .badge-spin { left: auto; right: 10px; top: -56px; width: 104px; height: 104px; }
+      .badge-spin svg { transform-origin: center; scale: .79; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .s-card { grid-template-columns: 1fr; padding: 34px; }
+      .s-card .s-img { min-height: 220px; }
     }
     @media (max-width: 760px) {
       nav { display: none; }
-      .logo { font-size: 20px; }
-      .header-inner { min-height: 70px; gap: 10px; }
-      .icon-btn { padding: 0 11px; font-size: 12px; }
       .account-label { display: none; }
-      .hero { grid-template-columns: 1fr; gap: 25px; padding-top: 20px; }
-      .hero h1 { font-size: clamp(64px, 15vw, 100px); }
-      .hero-copy p { max-width: 450px; }
-      .hero-visual { height: 450px; }
-      .hero-bottom { margin-top: 30px; }
-      section { padding: 55px 0; }
-      .section-head { align-items: start; }
-      .section-head > p { display: none; }
-      .toolbar, .search-sort { width: 100%; }
-      .search-sort input { flex: 1; width: 100px; }
-      .grid { grid-template-columns: repeat(2, 1fr); gap: 25px 12px; }
-      .product-image { height: 280px; }
-      .product-info { flex-direction: column; }
-      .price { display: flex; gap: 8px; align-items: center; }
-      .old-price { margin: 0; }
-      .quick-add { transform: none; font-size: 11px; padding: 11px 5px; }
+      section { padding: 80px 0; }
+      .hero { padding-top: 100px; }
+      .hero-bottom { gap: 20px; }
+      .hero-bottom strong { font-size: 18px; }
+      .hero-visual { height: 440px; }
+      .scroll-hint { display: none; }
+      .section-head { flex-direction: column; align-items: start; }
+      .search-sort { width: 100%; }
+      .search-sort input { flex: 1; width: auto; min-width: 0; }
+      .grid { gap: 26px 12px; }
+      .quick-add { transform: none; min-height: 38px; font-size: 11px; padding: 0 12px; }
       .story { grid-template-columns: 1fr; }
-      .story-photo { min-height: 0; height: 330px; }
-      .story-copy { padding: 30px; }
-      .features { grid-template-columns: 1fr; gap: 10px; }
-      .feature { padding-top: 18px; }
-      .footer-inner { flex-wrap: wrap; }
+      .story-photo { min-height: 340px; }
+      .story-copy { padding: 32px 24px; }
       .product-detail { grid-template-columns: 1fr; }
       .detail-img { height: 280px; }
+      .s-card { padding: 26px; min-height: 0; top: calc(86px + var(--n) * 16px); }
+      .footer-inner { flex-direction: column; text-align: center; }
+      dialog { padding: 22px; }
+      .look:nth-child(odd), .look:nth-child(even) { margin: 0; }
     }
-    @media (max-width: 400px) {
-      .product-image { height: 235px; }
-      .chip { padding: 10px 12px; }
-      .hero-visual { height: 380px; }
-      .header-actions { gap: 5px; }
+    @media (max-width: 420px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .product-info { flex-direction: column; }
     }
+
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation: none !important;
-        transition: none !important;
-        scroll-behavior: auto !important;
-      }
-      .reveal { opacity: 1; transform: none; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+      .grain { display: none; }
     }
   </style>
+  <noscript>
+    <style>
+      #loader { display: none; }
+      .hero-visual { clip-path: none; }
+      .fade-up, .reveal, .badge-spin { opacity: 1; transform: none; scale: 1; }
+    </style>
+  </noscript>
 </head>
 
-<body>
+<body class="loading">
+  <div id="loader" aria-hidden="true">
+    <div class="loader-inner">
+      <div class="loader-word"><span>N</span><span style="animation-delay:.06s">O</span><span style="animation-delay:.12s">I</span><span style="animation-delay:.18s">R</span><span style="animation-delay:.24s;color:#0b0b0b80">®</span></div>
+      <div class="loader-row"><span>DROP 001 / URBAN FORMS</span><span id="loaderCount">000</span></div>
+      <div class="loader-bar"><i id="loaderBar"></i></div>
+    </div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"><span id="cursorLabel">VIEW</span></div>
   <div class="progress" id="progress" aria-hidden="true"></div>
 
-  <header>
+  <header id="header">
     <div class="wrap header-inner">
-      <a class="logo" href="#" aria-label="NOIR STUDIO — главная">NOIR<span>®</span> STUDIO</a>
+      <a class="logo" href="#" aria-label="NOIR STUDIO — главная" data-magnetic>NOIR<span>✳</span> STUDIO</a>
       <nav aria-label="Основная навигация">
-        <a href="#catalog">Коллекция</a>
-        <a href="#about">Философия</a>
-        <a href="#club">NOIR Club</a>
+        <a href="#catalog" data-scramble>Коллекция</a>
+        <a href="#lookbook" data-scramble>Лукбук</a>
+        <a href="#about" data-scramble>Философия</a>
+        <a href="#club" data-scramble>NOIR Club</a>
       </nav>
       <div class="header-actions">
         <button class="icon-btn" id="favoritesBtn" aria-label="Показать избранное" aria-pressed="false">♡</button>
@@ -510,58 +718,81 @@
   </header>
 
   <main>
-    <div class="wrap">
-      <div class="hero">
+    <div class="hero" id="hero">
+      <canvas id="heroCanvas" aria-hidden="true"></canvas>
+      <div class="hero-blob a" aria-hidden="true"></div>
+      <div class="hero-blob b" aria-hidden="true"></div>
+
+      <div class="wrap hero-grid">
         <div class="hero-copy">
-          <div class="eyebrow"><span class="dot"></span> Independent streetwear label</div>
-          <h1>НЕ ПРОСТО<br>ОДЕЖДА.<em>ТВОЙ ГОЛОС.</em></h1>
-          <p class="muted">Для тех, кто не вписывается в рамки. Свободные силуэты, чистые линии и характер в каждой детали.</p>
-          <div class="hero-buttons">
-            <a class="btn" href="#catalog">Смотреть коллекцию <span>↗</span></a>
-            <a class="btn secondary" href="#about">О бренде</a>
+          <div class="eyebrow fade-up" style="--d:.5s"><span class="dot"></span> Independent streetwear label</div>
+          <h1 aria-label="Не просто одежда. Твой голос.">
+            <span class="line" aria-hidden="true"><span class="split">НЕ ПРОСТО</span></span>
+            <span class="line" aria-hidden="true"><span class="split">ОДЕЖДА.</span></span>
+            <span class="line" aria-hidden="true"><span class="split">ТВОЙ ГОЛОС.</span></span>
+          </h1>
+          <p class="muted fade-up" style="--d:1s">Для тех, кто не вписывается в рамки. Свободные силуэты, чистые линии и характер в каждой детали.</p>
+          <div class="hero-buttons fade-up" style="--d:1.15s">
+            <a class="btn" href="#catalog" data-magnetic>Смотреть коллекцию <span class="arrow">↗</span></a>
+            <a class="btn secondary" href="#lookbook" data-magnetic>Лукбук</a>
           </div>
-          <div class="hero-bottom">
-            <div><strong>01 / 26</strong><span class="muted">НОВЫЙ ДРОП</span></div>
+          <div class="hero-bottom fade-up" style="--d:1.3s">
+            <div><strong>001</strong><span class="muted">НОВЫЙ ДРОП</span></div>
             <div><strong>XS—XL</strong><span class="muted">ТВОЯ ПОСАДКА</span></div>
             <div><strong>100%</strong><span class="muted">ТВОЙ ХАРАКТЕР</span></div>
           </div>
         </div>
 
-        <div class="hero-visual">
-          <img
-            src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1100&q=85"
-            alt="Городской образ новой коллекции"
-            fetchpriority="high">
-          <div class="image-top"><span>DROP 001 / URBAN FORMS</span><span>© NOIR</span></div>
-          <div class="floating-label">NEW SEASON<b>NO RULES</b>JUST YOU</div>
-          <div class="image-bottom">
-            <div><strong>Outside the ordinary.</strong><p>Твой город. Твой ритм. Твои правила.</p></div>
-            <a class="round-link" href="#catalog" aria-label="Перейти к коллекции">↗</a>
+        <div class="hero-visual-wrap">
+          <div class="badge-spin" aria-hidden="true">
+            <svg viewBox="0 0 132 132">
+              <defs><path id="circle" d="M66,66 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0"/></defs>
+              <text><textPath href="#circle">NEW SEASON ✳ NO RULES ✳ JUST YOU ✳</textPath></text>
+            </svg>
+            <b>✳</b>
+          </div>
+          <div class="hero-visual" id="heroVisual">
+            <img
+              src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1100&q=85"
+              alt="Городской образ новой коллекции" fetchpriority="high">
+            <div class="image-top"><span>DROP 001 / URBAN FORMS</span><span id="clock">MSK 00:00:00</span></div>
+            <div class="image-bottom">
+              <div><strong>Outside the ordinary.</strong><p>Твой город. Твой ритм. Твои правила.</p></div>
+              <a class="round-link" href="#catalog" aria-label="Перейти к коллекции" data-magnetic>↗</a>
+            </div>
           </div>
         </div>
       </div>
+      <div class="scroll-hint" aria-hidden="true">SCROLL<i></i></div>
     </div>
 
-    <div class="ticker" aria-label="Новая коллекция. Свободные силуэты. NOIR STUDIO.">
-      <div class="ticker-track" aria-hidden="true">
-        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
-        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
-        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
-        <span>WEAR YOUR ATTITUDE ✳ NEW COLLECTION ✳ NOIR STUDIO ✳ NO LIMITS ✳</span>
+    <div class="marquees" aria-label="Новая коллекция. NOIR STUDIO.">
+      <div class="marquee one" data-dir="1" aria-hidden="true">
+        <div class="marquee-track">
+          <span>WEAR YOUR ATTITUDE <b class="star">✳</b> NEW COLLECTION <b class="star">✳</b> NOIR STUDIO <b class="star">✳</b> NO LIMITS <b class="star">✳</b></span>
+          <span>WEAR YOUR ATTITUDE <b class="star">✳</b> NEW COLLECTION <b class="star">✳</b> NOIR STUDIO <b class="star">✳</b> NO LIMITS <b class="star">✳</b></span>
+        </div>
+      </div>
+      <div class="marquee two" data-dir="-1" aria-hidden="true">
+        <div class="marquee-track">
+          <span>ТВОЙ ГОРОД <b class="star">✳</b> ТВОЙ РИТМ <b class="star">✳</b> ТВОИ ПРАВИЛА <b class="star">✳</b> DROP 001 <b class="star">✳</b></span>
+          <span>ТВОЙ ГОРОД <b class="star">✳</b> ТВОЙ РИТМ <b class="star">✳</b> ТВОИ ПРАВИЛА <b class="star">✳</b> DROP 001 <b class="star">✳</b></span>
+        </div>
       </div>
     </div>
 
     <section id="catalog" class="wrap">
-      <div class="section-head reveal">
+      <div class="section-head">
         <div>
-          <div class="eyebrow"><span class="dot"></span> The essentials</div>
-          <h2>Выбери свой вайб.</h2>
+          <div class="eyebrow reveal"><span class="dot"></span> The essentials</div>
+          <h2 class="reveal-words">Выбери свой вайб.</h2>
         </div>
-        <p class="muted" style="font-size:12px">Меньше лишнего. Больше тебя.</p>
+        <p class="muted reveal" style="font-size:12px">Меньше лишнего. Больше тебя.</p>
       </div>
 
-      <div class="toolbar">
+      <div class="toolbar reveal">
         <div class="filters" id="filters" aria-label="Категории товаров">
+          <span class="chip-pill" id="chipPill" aria-hidden="true"></span>
           <button class="chip active" data-category="all" aria-pressed="true">Всё</button>
           <button class="chip" data-category="tees" aria-pressed="false">Футболки</button>
           <button class="chip" data-category="hoodies" aria-pressed="false">Худи</button>
@@ -583,44 +814,98 @@
       <div class="grid" id="products"></div>
     </section>
 
+    <section id="lookbook" class="lookbook" aria-label="Лукбук">
+      <div class="lookbook-sticky">
+        <div class="lookbook-track" id="lookTrack">
+          <div class="look-intro">
+            <div class="eyebrow"><span class="dot"></span> Lookbook / Drop 001</div>
+            <h2>URBAN<br><span>FORMS</span></h2>
+            <p class="muted" style="max-width:340px;line-height:1.8;font-size:14px">Пять образов для города, который никогда не спит. Листай дальше →</p>
+          </div>
+          <!-- Карточки образов добавляются скриптом -->
+        </div>
+        <div class="look-progress" aria-hidden="true"><i id="lookProgress"></i></div>
+      </div>
+    </section>
+
+    <section class="wrap manifest" aria-label="Манифест">
+      <div class="eyebrow"><span class="dot"></span> Manifest</div>
+      <p id="manifest">Мы не делаем одежду для витрин. Мы делаем вещи, в которых <span data-hl>ты</span> чувствуешь себя собой — в метро, на крыше, на рассвете после долгой ночи. Без громких логотипов. Без чужих правил. Только <span data-hl>характер</span>.</p>
+    </section>
+
     <section id="about" class="wrap" style="padding-top:0">
       <div class="story reveal">
         <div class="story-photo">
-          <img loading="lazy"
+          <img loading="lazy" data-parallax="0.12"
             src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1000&q=80"
             alt="Вещи на рейле в пространстве бренда">
         </div>
         <div class="story-copy">
           <div class="eyebrow"><span class="dot"></span> Beyond clothing</div>
-          <h2>Не следуй трендам.<br>Создавай свои.</h2>
-          <p class="muted">NOIR — это пространство самовыражения. Мы соединяем эстетику большого города и комфорт вещей, которые хочется носить каждый день. Без громких логотипов. Без чужих правил.</p>
-          <a class="btn secondary" href="#catalog">Найти свою вещь ↗</a>
+          <h2 class="big-h2 reveal-words">Не следуй трендам. Создавай свои.</h2>
+          <p class="muted">NOIR — это пространство самовыражения. Мы соединяем эстетику большого города и комфорт вещей, которые хочется носить каждый день.</p>
+          <a class="btn secondary" href="#catalog" data-magnetic>Найти свою вещь <span class="arrow">↗</span></a>
         </div>
       </div>
 
-      <div class="features">
-        <div class="feature reveal"><span>↗</span><h3>Свобода в движении</h3><p>Расслабленные силуэты для насыщенных дней и спонтанных планов.</p></div>
-        <div class="feature reveal"><span>✳</span><h3>Внимание к деталям</h3><p>Выразительные фактуры и лаконичные акценты вместо визуального шума.</p></div>
-        <div class="feature reveal"><span>◎</span><h3>Собери свой образ</h3><p>Добавляй вещи в избранное, сочетай оттенки и находи свой ритм.</p></div>
+      <div class="stats">
+        <div class="stat reveal"><strong data-count="8">0</strong><span>вещей в дропе</span></div>
+        <div class="stat reveal"><strong data-count="5">0</strong><span>размеров</span></div>
+        <div class="stat reveal"><strong data-count="4">0</strong><span>категории</span></div>
+        <div class="stat reveal"><strong data-count="100" data-suffix="%">0</strong><span>характера</span></div>
+      </div>
+
+      <div class="stack-cards" id="stackCards">
+        <article class="s-card" style="--n:0">
+          <div class="s-copy">
+            <span class="num">01</span>
+            <div><h3>Свобода в движении</h3><p>Расслабленные силуэты для насыщенных дней и спонтанных планов. Ничего не сковывает.</p></div>
+          </div>
+          <div class="s-img"><img loading="lazy" src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=80" alt="Худи свободного кроя"></div>
+        </article>
+        <article class="s-card" style="--n:1">
+          <div class="s-copy">
+            <span class="num">02</span>
+            <div><h3>Внимание к деталям</h3><p>Выразительные фактуры и лаконичные акценты вместо визуального шума.</p></div>
+          </div>
+          <div class="s-img"><img loading="lazy" src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80" alt="Фактурная куртка"></div>
+        </article>
+        <article class="s-card" style="--n:2">
+          <div class="s-copy">
+            <span class="num">03</span>
+            <div><h3>Собери свой образ</h3><p>Добавляй вещи в избранное, сочетай оттенки и находи свой ритм.</p></div>
+          </div>
+          <div class="s-img"><img loading="lazy" src="https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=900&q=80" alt="Джинсовая куртка в образе"></div>
+        </article>
+        <article class="s-card" style="--n:3">
+          <div class="s-copy">
+            <span class="num">04</span>
+            <div><h3>Носи. Снова и снова.</h3><p>Вещи, к которым возвращаешься каждое утро — потому что они просто твои.</p></div>
+          </div>
+          <div class="s-img"><img loading="lazy" src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80" alt="Базовая футболка"></div>
+        </article>
       </div>
     </section>
 
     <section id="club" class="wrap" style="padding-top:0">
-      <div class="club reveal">
-        <p class="eyebrow" style="justify-content:center;color:var(--accent)">YOU ARE ONE OF US</p>
-        <h2>Свой среди тех,<br>кто выбирает себя.</h2>
-        <p class="muted">Загляни в NOIR Club и попробуй промокод <b style="color:var(--text)">FIRST10</b><br>на скидку 10% в демокорзине.</p>
-        <button class="btn" id="joinBtn">Присоединиться к клубу ↗</button>
-        <p class="fine">Демопрофиль — без рассылок и передачи данных на сервер.</p>
+      <div class="club-border reveal">
+        <div class="club" id="clubCard">
+          <p class="eyebrow" style="justify-content:center;color:var(--accent)">YOU ARE ONE OF US</p>
+          <h2 class="big-h2 reveal-words">Свой среди тех, кто выбирает себя.</h2>
+          <p class="muted">Загляни в NOIR Club и попробуй промокод <b style="color:var(--text)">FIRST10</b><br>на скидку 10% в демокорзине.</p>
+          <button class="btn" id="joinBtn" data-magnetic>Присоединиться к клубу <span class="arrow">↗</span></button>
+          <p class="fine">Демопрофиль — без рассылок и передачи данных на сервер.</p>
+        </div>
       </div>
     </section>
   </main>
 
   <footer>
+    <div class="footer-giant" id="footerGiant" aria-hidden="true">NOIR✳STUDIO</div>
     <div class="wrap footer-inner">
-      <a class="logo" href="#">NOIR<span>®</span> STUDIO</a>
+      <a class="logo" href="#" style="color:var(--text)">NOIR<span>✳</span> STUDIO</a>
       <p>© <span id="year"></span> NOIR STUDIO · Демонстрационный магазин</p>
-      <a href="#catalog" style="font-size:12px">Back to collection ↑</a>
+      <a href="#" data-magnetic>Наверх ↑</a>
     </div>
   </footer>
 
@@ -629,7 +914,6 @@
       <h2 id="authTitle">Welcome to NOIR.</h2>
       <button class="close" data-close aria-label="Закрыть">×</button>
     </div>
-
     <form id="authForm" class="stack">
       <p class="fine">Создай демопрофиль. Это не защищённый аккаунт: имя и email сохранятся только в этом браузере. Пароль не требуется.</p>
       <label>Как тебя зовут?
@@ -642,9 +926,8 @@
         <input type="checkbox" required>
         <span>Разрешаю сохранить имя и email локально на этом устройстве для демонстрации.</span>
       </label>
-      <button class="btn full" type="submit">Создать демопрофиль ↗</button>
+      <button class="btn full" type="submit">Создать демопрофиль <span class="arrow">↗</span></button>
     </form>
-
     <div id="profileView" hidden>
       <p id="profileGreeting"></p>
       <p id="profileEmail" class="muted"></p>
@@ -666,9 +949,7 @@
       <h2 id="cartTitle">Твоя корзина.</h2>
       <button class="close" data-close aria-label="Закрыть">×</button>
     </div>
-
     <div id="cartItems"></div>
-
     <div class="cart-footer">
       <form class="promo" id="promoForm">
         <input id="promoInput" placeholder="Промокод" aria-label="Промокод" maxlength="30">
@@ -677,7 +958,7 @@
       <div class="total-line"><span class="muted">Товары</span><span id="subtotal">0 ₽</span></div>
       <div class="total-line"><span class="muted">Скидка</span><span id="discount">0 ₽</span></div>
       <div class="total-line big"><span>Итого</span><span id="total">0 ₽</span></div>
-      <button class="btn full" id="checkoutBtn">Проверить демозаказ ↗</button>
+      <button class="btn full" id="checkoutBtn">Проверить демозаказ <span class="arrow">↗</span></button>
       <p class="fine">Оплата не подключена. Доставка не рассчитана. Заказ не отправляется продавцу.</p>
     </div>
   </dialog>
@@ -692,11 +973,16 @@
     <button class="btn full" data-close>Продолжить смотреть</button>
   </dialog>
 
-  <div id="toasts" role="status" aria-live="polite"></div>
+  <canvas id="fx" popover="manual" aria-hidden="true"></canvas>
+  <div id="toasts" popover="manual" role="status" aria-live="polite"></div>
 
   <script>
     const $ = (selector, root = document) => root.querySelector(selector);
     const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = matchMedia('(pointer: fine)').matches;
     const money = value => new Intl.NumberFormat('ru-RU', {
       style: 'currency', currency: 'RUB', maximumFractionDigits: 0
     }).format(value);
@@ -706,73 +992,42 @@
       `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
 
     const products = [
-      {
-        id: 1, name: 'Essential Tee', category: 'tees',
-        color: 'Молочный', price: 2900, old: 3500, badge: 'BESTSELLER',
-        photo: 'photo-1521572163474-6864f9cf17ab',
-        sizes: ['XS', 'S', 'M', 'L', 'XL'],
-        description: 'Базовая футболка свободного кроя. Чистый силуэт, который легко вписать в любой образ.'
-      },
-      {
-        id: 2, name: 'Everyday Hoodie', category: 'hoodies',
-        color: 'Графит', price: 6900, badge: 'NEW',
-        photo: 'photo-1556821840-3a63f95609a7',
-        sizes: ['S', 'M', 'L', 'XL'],
-        description: 'Объёмное худи для прохладных вечеров. Расслабленная посадка и лаконичный дизайн.'
-      },
-      {
-        id: 3, name: 'Urban Denim', category: 'outerwear',
-        color: 'Винтажный синий', price: 8900, badge: 'NEW',
-        photo: 'photo-1543076447-215ad9ba6923',
-        sizes: ['S', 'M', 'L', 'XL'],
-        description: 'Джинсовая куртка с характером. Носи поверх футболки или собирай многослойные сочетания.'
-      },
-      {
-        id: 4, name: 'City Backpack', category: 'accessories',
-        color: 'Песочный', price: 4900, badge: '',
-        photo: 'photo-1553062407-98eeb64c6a62',
-        sizes: ['ONE'],
-        description: 'Городской рюкзак для повседневных вещей. Минималистичная форма без лишних деталей.'
-      },
-      {
-        id: 5, name: 'Statement Tee', category: 'tees',
-        color: 'Белый', price: 3400, badge: 'NEW',
-        photo: 'photo-1503341504253-dff4815485f1',
-        sizes: ['XS', 'S', 'M', 'L'],
-        description: 'Футболка для образов с настроением. Сочетай с любимым денимом и выразительными аксессуарами.'
-      },
-      {
-        id: 6, name: 'Off-Duty Hoodie', category: 'hoodies',
-        color: 'Чёрный', price: 7200, old: 8500, badge: 'SPECIAL',
-        photo: 'photo-1578681994506-b8f463449011',
-        sizes: ['S', 'M', 'L', 'XL'],
-        description: 'Худи для дней без расписания. Свободный крой и универсальный оттенок.'
-      },
-      {
-        id: 7, name: 'Nomad Jacket', category: 'outerwear',
-        color: 'Тёмный', price: 12900, badge: '',
-        photo: 'photo-1551028719-00167b16eac5',
-        sizes: ['S', 'M', 'L'],
-        description: 'Акцентная куртка для городских маршрутов. Выразительная фактура и уверенный силуэт.'
-      },
-      {
-        id: 8, name: 'Daily Cap', category: 'accessories',
-        color: 'Чёрный', price: 2400, badge: 'NEW',
-        photo: 'photo-1588850561407-ed78c282e89b',
-        sizes: ['ONE'],
-        description: 'Последний штрих повседневного образа. Кепка с регулируемой посадкой.'
-      }
+      { id: 1, name: 'Essential Tee', category: 'tees', color: 'Молочный', price: 2900, old: 3500, badge: 'BESTSELLER',
+        photo: 'photo-1521572163474-6864f9cf17ab', sizes: ['XS', 'S', 'M', 'L', 'XL'],
+        description: 'Базовая футболка свободного кроя. Чистый силуэт, который легко вписать в любой образ.' },
+      { id: 2, name: 'Everyday Hoodie', category: 'hoodies', color: 'Графит', price: 6900, badge: 'NEW',
+        photo: 'photo-1556821840-3a63f95609a7', sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Объёмное худи для прохладных вечеров. Расслабленная посадка и лаконичный дизайн.' },
+      { id: 3, name: 'Urban Denim', category: 'outerwear', color: 'Винтажный синий', price: 8900, badge: 'NEW',
+        photo: 'photo-1543076447-215ad9ba6923', sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Джинсовая куртка с характером. Носи поверх футболки или собирай многослойные сочетания.' },
+      { id: 4, name: 'City Backpack', category: 'accessories', color: 'Песочный', price: 4900, badge: '',
+        photo: 'photo-1553062407-98eeb64c6a62', sizes: ['ONE'],
+        description: 'Городской рюкзак для повседневных вещей. Минималистичная форма без лишних деталей.' },
+      { id: 5, name: 'Statement Tee', category: 'tees', color: 'Белый', price: 3400, badge: 'NEW',
+        photo: 'photo-1503341504253-dff4815485f1', sizes: ['XS', 'S', 'M', 'L'],
+        description: 'Футболка для образов с настроением. Сочетай с любимым денимом и выразительными аксессуарами.' },
+      { id: 6, name: 'Off-Duty Hoodie', category: 'hoodies', color: 'Чёрный', price: 7200, old: 8500, badge: 'SPECIAL',
+        photo: 'photo-1578681994506-b8f463449011', sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Худи для дней без расписания. Свободный крой и универсальный оттенок.' },
+      { id: 7, name: 'Nomad Jacket', category: 'outerwear', color: 'Тёмный', price: 12900, badge: '',
+        photo: 'photo-1551028719-00167b16eac5', sizes: ['S', 'M', 'L'],
+        description: 'Акцентная куртка для городских маршрутов. Выразительная фактура и уверенный силуэт.' },
+      { id: 8, name: 'Daily Cap', category: 'accessories', color: 'Чёрный', price: 2400, badge: 'NEW',
+        photo: 'photo-1588850561407-ed78c282e89b', sizes: ['ONE'],
+        description: 'Последний штрих повседневного образа. Кепка с регулируемой посадкой.' }
     ];
+    const lookbookIds = [7, 2, 3, 6, 5];
 
     const findProduct = id => products.find(p => p.id === Number(id));
 
+    /* ═════════════ Storage ═════════════ */
     function read(key, fallback) {
       try {
         const value = localStorage.getItem('noir_' + key);
         return value === null ? fallback : JSON.parse(value);
       } catch { return fallback; }
     }
-
     let storageWarningShown = false;
     function save(key, value) {
       try {
@@ -800,8 +1055,7 @@
       : [];
 
     const savedUser = read('user', null);
-    let user = savedUser && typeof savedUser.name === 'string' &&
-      typeof savedUser.email === 'string'
+    let user = savedUser && typeof savedUser.name === 'string' && typeof savedUser.email === 'string'
       ? { name: savedUser.name.slice(0, 40), email: savedUser.email.slice(0, 120) }
       : null;
 
@@ -811,29 +1065,40 @@
     let selectedProduct = null;
     let selectedSize = null;
 
+    /* ═════════════ Top-layer helpers (toasts + FX above dialogs) ═════════════ */
+    const supportsPopover = typeof HTMLElement.prototype.showPopover === 'function';
+    function bringToTop(el) {
+      if (!supportsPopover) { el.classList.add('no-popover'); return; }
+      try { if (el.matches(':popover-open')) el.hidePopover(); el.showPopover(); } catch {}
+    }
+
     function toast(message) {
+      const box = $('#toasts');
       const element = document.createElement('div');
       element.className = 'toast';
       element.textContent = message;
-      $('#toasts').append(element);
-      setTimeout(() => element.remove(), 3800);
+      box.append(element);
+      bringToTop(box);
+      setTimeout(() => {
+        element.remove();
+        if (!box.children.length && supportsPopover) { try { box.hidePopover(); } catch {} }
+      }, 3800);
     }
 
+    /* ═════════════ Dialogs ═════════════ */
     function openDialog(id) {
       const dialog = document.getElementById(id);
       if (!dialog.open) dialog.showModal();
       document.body.classList.add('locked');
+      if ($('#toasts').children.length) bringToTop($('#toasts'));
     }
-
     function closeDialog(dialog) {
       dialog.close();
       if (!$('dialog[open]')) document.body.classList.remove('locked');
     }
-
     $$('dialog').forEach(dialog => {
       dialog.addEventListener('click', event => {
         if (event.target.closest('[data-close]')) closeDialog(dialog);
-
         // Закрытие при клике за пределами окна, но не по его внутренним отступам.
         if (event.target === dialog) {
           const rect = dialog.getBoundingClientRect();
@@ -848,37 +1113,51 @@
       });
     });
 
+    /* ═════════════ Reveal on scroll ═════════════ */
+    const revealObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add(entry.target.classList.contains('product') ? 'in' : 'visible');
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: .15, rootMargin: '0px 0px -40px 0px' }) : null;
+
+    function observe(el) {
+      if (revealObserver) revealObserver.observe(el);
+      else el.classList.add(el.classList.contains('product') ? 'in' : 'visible');
+    }
+
+    /* ═════════════ Catalog ═════════════ */
+    function wishMarkup(product) {
+      const fav = favorites.includes(product.id);
+      return `<button class="wish ${fav ? 'active' : ''}" data-wish="${product.id}"
+        aria-label="${fav ? 'Убрать из избранного' : 'В избранное'}: ${product.name}"
+        aria-pressed="${fav}">${fav ? '♥' : '♡'}</button>`;
+    }
+
     function renderProducts() {
       const query = $('#search').value.trim().toLocaleLowerCase('ru');
       let list = products.filter(product =>
         (category === 'all' || product.category === category) &&
         (!onlyFavorites || favorites.includes(product.id)) &&
-        `${product.name} ${product.color} ${product.description}`
-          .toLocaleLowerCase('ru').includes(query)
+        `${product.name} ${product.color} ${product.description}`.toLocaleLowerCase('ru').includes(query)
       );
-
       const sort = $('#sort').value;
       if (sort === 'low') list.sort((a, b) => a.price - b.price);
       if (sort === 'high') list.sort((a, b) => b.price - a.price);
       if (sort === 'new') list.sort((a, b) => Number(b.badge === 'NEW') - Number(a.badge === 'NEW'));
 
-      $('#resultsCount').textContent =
-        `${onlyFavorites ? 'Избранное · ' : ''}Найдено: ${list.length}`;
+      $('#resultsCount').textContent = `${onlyFavorites ? 'Избранное · ' : ''}Найдено: ${list.length}`;
 
       // В HTML-шаблоны попадают только статические данные каталога.
       $('#products').innerHTML = list.length ? list.map((product, index) => `
-        <article class="product" style="animation-delay:${index * 35}ms">
-          <div class="product-image">
+        <article class="product" style="--i:${index % 4}">
+          <div class="product-image" data-cursor="VIEW">
             <button class="product-open" data-open="${product.id}" aria-label="Открыть ${product.name}">
               <img src="${image(product.photo)}" alt="${product.name}, ${product.color}" loading="lazy">
             </button>
             ${product.badge ? `<span class="badge ${product.badge === 'NEW' ? 'lime' : ''}">${product.badge}</span>` : ''}
-            <button class="wish ${favorites.includes(product.id) ? 'active' : ''}"
-              data-wish="${product.id}"
-              aria-label="${favorites.includes(product.id) ? 'Убрать из избранного' : 'В избранное'}: ${product.name}"
-              aria-pressed="${favorites.includes(product.id)}">
-              ${favorites.includes(product.id) ? '♥' : '♡'}
-            </button>
+            ${wishMarkup(product)}
             <button class="quick-add" data-open="${product.id}">Выбрать размер <span aria-hidden="true">＋</span></button>
           </div>
           <div class="product-info">
@@ -889,6 +1168,8 @@
           </div>
         </article>
       `).join('') : '<div class="empty">Ничего не нашлось. Попробуй другую категорию или поисковый запрос.</div>';
+
+      $$('#products .product').forEach(observe);
     }
 
     $('#products').addEventListener('click', event => {
@@ -898,14 +1179,31 @@
         const existed = favorites.includes(id);
         favorites = existed ? favorites.filter(value => value !== id) : [...favorites, id];
         save('favorites', favorites);
-        renderProducts();
-        $(`[data-wish="${id}"]`)?.focus({ preventScroll: true });
+        if (onlyFavorites) renderProducts();
+        else {
+          const holder = document.createElement('div');
+          holder.innerHTML = wishMarkup(findProduct(id));
+          const fresh = holder.firstElementChild;
+          wishButton.replaceWith(fresh);
+          fresh.classList.add('pop');
+          fresh.focus({ preventScroll: true });
+          if (!existed) burst(fresh, 18);
+        }
         toast(existed ? 'Убрано из избранного' : 'Добавлено в избранное ♥');
         return;
       }
       const openButton = event.target.closest('[data-open]');
       if (openButton) showProduct(Number(openButton.dataset.open));
     });
+
+    function moveChipPill() {
+      const active = $('#filters .chip.active');
+      const pill = $('#chipPill');
+      if (!active) return;
+      pill.style.width = active.offsetWidth + 'px';
+      pill.style.height = active.offsetHeight + 'px';
+      pill.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+    }
 
     $('#filters').addEventListener('click', event => {
       const button = event.target.closest('[data-category]');
@@ -916,9 +1214,9 @@
         chip.classList.toggle('active', active);
         chip.setAttribute('aria-pressed', String(active));
       });
+      moveChipPill();
       renderProducts();
     });
-
     $('#search').addEventListener('input', renderProducts);
     $('#sort').addEventListener('change', renderProducts);
 
@@ -926,25 +1224,50 @@
       onlyFavorites = !onlyFavorites;
       $('#favoritesBtn').textContent = onlyFavorites ? '♥' : '♡';
       $('#favoritesBtn').setAttribute('aria-pressed', String(onlyFavorites));
-      $('#favoritesBtn').setAttribute('aria-label',
-        onlyFavorites ? 'Показать все товары' : 'Показать избранное');
+      $('#favoritesBtn').setAttribute('aria-label', onlyFavorites ? 'Показать все товары' : 'Показать избранное');
       renderProducts();
       $('#catalog').scrollIntoView({ behavior: 'smooth' });
     });
 
+    // 3D-наклон карточек с бликом
+    if (finePointer && !reducedMotion) {
+      let tilted = null;
+      $('#products').addEventListener('pointermove', event => {
+        const card = event.target.closest('.product-image');
+        if (tilted && tilted !== card) resetTilt(tilted);
+        if (!card) return;
+        tilted = card;
+        const r = card.getBoundingClientRect();
+        const x = (event.clientX - r.left) / r.width;
+        const y = (event.clientY - r.top) / r.height;
+        card.classList.add('tilting');
+        card.style.setProperty('--ry', `${(x - .5) * 14}deg`);
+        card.style.setProperty('--rx', `${(.5 - y) * 14}deg`);
+        card.style.setProperty('--gx', `${x * 100}%`);
+        card.style.setProperty('--gy', `${y * 100}%`);
+      });
+      $('#products').addEventListener('pointerleave', () => tilted && resetTilt(tilted));
+      function resetTilt(card) {
+        card.classList.remove('tilting');
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+        tilted = null;
+      }
+    }
+
+    /* ═════════════ Product dialog ═════════════ */
     function showProduct(id) {
       selectedProduct = findProduct(id);
       if (!selectedProduct) return;
       selectedSize = null;
       const p = selectedProduct;
-
       $('#productDetail').innerHTML = `
         <div class="product-detail">
-          <img class="detail-img" src="${image(p.photo)}" alt="${p.name}">
+          <div class="detail-img-wrap"><img class="detail-img" src="${image(p.photo)}" alt="${p.name}"></div>
           <div class="detail-copy">
             <span class="eyebrow" style="color:var(--accent)">NOIR / COLLECTION 001</span>
             <h3>${p.name}</h3>
-            <strong style="font-size:23px">${money(p.price)}</strong>
+            <strong style="font-size:24px">${money(p.price)}</strong>
             <p>${p.description}</p>
             <span class="fine">Цвет: ${p.color}</span>
             <span class="fine" style="margin-top:14px">Выбери размер</span>
@@ -971,9 +1294,7 @@
       }
 
       if (event.target.closest('#addToCart') && selectedProduct && selectedSize) {
-        const existing = cart.find(item =>
-          item.id === selectedProduct.id && item.size === selectedSize);
-
+        const existing = cart.find(item => item.id === selectedProduct.id && item.size === selectedSize);
         if (existing && existing.qty >= 99) {
           toast('Не больше 99 единиц одного размера.');
           return;
@@ -981,21 +1302,66 @@
         if (existing) existing.qty++;
         else cart.push({ id: selectedProduct.id, size: selectedSize, qty: 1 });
 
+        const imgRect = $('.detail-img', $('#productDetail')).getBoundingClientRect();
         persistCart();
         closeDialog($('#productDialog'));
+        flyToCart(image(selectedProduct.photo, 300), imgRect);
         toast(`${selectedProduct.name} · ${selectedSize} — в корзине`);
       }
     });
 
+    // Картинка «летит» в корзину по дуге
+    function flyToCart(src, from) {
+      const bump = () => {
+        const count = $('#cartCount');
+        count.classList.remove('bump'); void count.offsetWidth; count.classList.add('bump');
+      };
+      if (reducedMotion || !from.width) return bump();
+      const to = $('#cartBtn').getBoundingClientRect();
+      const size = Math.min(from.width, from.height, 220);
+      const fly = document.createElement('img');
+      fly.src = src; fly.alt = '';
+      Object.assign(fly.style, {
+        position: 'fixed', zIndex: 500, pointerEvents: 'none', objectFit: 'cover',
+        width: size + 'px', height: size + 'px', borderRadius: '20px',
+        left: (from.left + from.width / 2 - size / 2) + 'px', top: (from.top + from.height / 2 - size / 2) + 'px',
+        boxShadow: '0 30px 60px #000a'
+      });
+      document.body.append(fly);
+      const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+      const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+      fly.animate([
+        { transform: 'translate(0,0) scale(1) rotate(0)', borderRadius: '20px' },
+        { transform: `translate(${dx * .4}px, ${dy * .4 - 160}px) scale(.6) rotate(-14deg)`, offset: .45 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.08) rotate(20deg)`, borderRadius: '50%', opacity: .6 }
+      ], { duration: 1000, easing: 'cubic-bezier(.65,0,.35,1)' }).onfinish = () => {
+        fly.remove();
+        bump();
+        burst($('#cartBtn'), 24);
+      };
+    }
+
+    /* ═════════════ Cart ═════════════ */
     function totals() {
       const subtotal = cart.reduce((sum, item) => sum + findProduct(item.id).price * item.qty, 0);
       const discount = promoApplied ? Math.round(subtotal * .1) : 0;
       return { subtotal, discount, total: subtotal - discount };
     }
-
     function persistCart() {
       save('cart', cart);
       renderCart();
+    }
+
+    let shownTotal = 0;
+    function animateTotal(target) {
+      const start = shownTotal, t0 = performance.now(), dur = reducedMotion ? 0 : 600;
+      const step = now => {
+        const t = dur ? clamp((now - t0) / dur, 0, 1) : 1;
+        shownTotal = Math.round(lerp(start, target, 1 - Math.pow(1 - t, 3)));
+        $('#total').textContent = money(shownTotal);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
     }
 
     function renderCart() {
@@ -1006,7 +1372,7 @@
       $('#cartItems').innerHTML = cart.length ? cart.map((item, index) => {
         const p = findProduct(item.id);
         return `
-          <div class="cart-row">
+          <div class="cart-row" style="--i:${index}">
             <img src="${image(p.photo, 200)}" alt="${p.name}">
             <div>
               <h3>${p.name}</h3>
@@ -1027,7 +1393,7 @@
       const values = totals();
       $('#subtotal').textContent = money(values.subtotal);
       $('#discount').textContent = '−' + money(values.discount);
-      $('#total').textContent = money(values.total);
+      animateTotal(values.total);
       $('#checkoutBtn').disabled = cart.length === 0;
       $('#promoInput').placeholder = promoApplied ? 'FIRST10 применён ✓' : 'Промокод';
     }
@@ -1035,7 +1401,6 @@
     $('#cartItems').addEventListener('click', event => {
       const quantityButton = event.target.closest('[data-qty]');
       const removeButton = event.target.closest('[data-remove]');
-
       if (quantityButton) {
         const index = Number(quantityButton.dataset.index);
         const item = cart[index];
@@ -1046,7 +1411,6 @@
         const next = $(`[data-index="${Math.min(index, cart.length - 1)}"][data-qty="${quantityButton.dataset.qty}"]`, $('#cartItems'));
         (next || $('#cartDialog .close')).focus({ preventScroll: true });
       }
-
       if (removeButton) {
         const index = Number(removeButton.dataset.remove);
         cart.splice(index, 1);
@@ -1070,6 +1434,7 @@
         $('#promoInput').value = '';
         renderCart();
         toast('FIRST10 применён: скидка 10%');
+        confetti(90);
       } else toast('Промокод не найден. Попробуй FIRST10');
     });
 
@@ -1080,8 +1445,10 @@
         `Товаров: ${count}. Стоимость со скидкой: ${money(totals().total)}, без доставки.`;
       closeDialog($('#cartDialog'));
       openDialog('checkoutDialog');
+      confetti(180);
     });
 
+    /* ═════════════ Profile ═════════════ */
     function updateProfile() {
       $('#accountLabel').textContent = user ? user.name : 'Войти';
       $('#authForm').hidden = Boolean(user);
@@ -1093,7 +1460,6 @@
         $('#profileEmail').textContent = user.email;
       }
     }
-
     function showAccount() {
       updateProfile();
       openDialog('authDialog');
@@ -1110,13 +1476,13 @@
         form.elements.name.focus();
         return;
       }
-
       user = { name, email: form.elements.email.value.trim() };
       save('user', user);
       updateProfile();
       form.reset();
       closeDialog($('#authDialog'));
       toast(`Добро пожаловать, ${user.name} ✳`);
+      confetti(120);
     });
 
     $('#logoutBtn').addEventListener('click', () => {
@@ -1127,39 +1493,426 @@
       toast('Демопрофиль удалён');
     });
 
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: .12 });
-      $$('.reveal').forEach(element => observer.observe(element));
-    } else {
-      $$('.reveal').forEach(element => element.classList.add('visible'));
+    /* ═════════════ Lookbook ═════════════ */
+    const lookTrack = $('#lookTrack');
+    lookTrack.insertAdjacentHTML('beforeend', lookbookIds.map((id, i) => {
+      const p = findProduct(id);
+      return `
+        <article class="look" data-cursor="OPEN">
+          <img src="${image(p.photo, 1000)}" alt="${p.name}" loading="lazy">
+          <span class="look-num" aria-hidden="true">0${i + 1}</span>
+          <div class="look-info">
+            <div><h3>${p.name}</h3><p>${p.color} · ${money(p.price)}</p></div>
+            <button class="round-link" data-look="${p.id}" aria-label="Открыть ${p.name}">↗</button>
+          </div>
+        </article>`;
+    }).join('') + `
+      <div class="look-outro">
+        <h2 class="big-h2">Весь дроп — в каталоге.</h2>
+        <a class="btn" href="#catalog" data-magnetic>К коллекции <span class="arrow">↗</span></a>
+      </div>`);
+
+    lookTrack.addEventListener('click', event => {
+      const look = event.target.closest('.look');
+      if (!look) return;
+      const btn = $('[data-look]', look);
+      showProduct(Number(btn.dataset.look));
+    });
+
+    const lookSection = $('#lookbook');
+    let lookDistance = 0;
+    function sizeLookbook() {
+      lookDistance = Math.max(0, lookTrack.scrollWidth - innerWidth);
+      lookSection.style.height = (lookDistance + innerHeight) + 'px';
     }
 
-    let scrollScheduled = false;
-    function updateProgress() {
-      const distance = document.documentElement.scrollHeight - innerHeight;
-      $('#progress').style.width = `${distance > 0 ? Math.min(100, scrollY / distance * 100) : 0}%`;
-      scrollScheduled = false;
+    /* ═════════════ Text splitting ═════════════ */
+    let ci = 0;
+    $$('.hero .split').forEach(el => {
+      const text = el.textContent;
+      el.innerHTML = text.split(' ').map(word => `<span class="word">${[...word].map(ch =>
+        `<span class="char" style="--ci:${ci++}">${ch}</span>`).join('')}</span>`).join(' ');
+    });
+
+    $$('.reveal-words').forEach(el => {
+      el.setAttribute('aria-label', el.textContent);
+      el.innerHTML = el.textContent.split(' ').map((w, i) =>
+        `<span class="w" aria-hidden="true"><span style="--wi:${i}">${w}</span></span>`).join(' ');
+      observe(el);
+    });
+
+    const giant = $('#footerGiant');
+    giant.innerHTML = [...giant.textContent].map((ch, i) =>
+      `<span style="--ci:${i}${ch === '✳' ? ';color:var(--accent);background:none;-webkit-text-fill-color:var(--accent)' : ''}">${ch}</span>`).join('');
+    observe(giant);
+
+    // Манифест: слова «зажигаются» по мере прокрутки
+    const manifest = $('#manifest');
+    (function splitManifest() {
+      const words = [];
+      manifest.childNodes.forEach(node => {
+        if (node.nodeType === 3) node.textContent.split(/\s+/).filter(Boolean).forEach(w => words.push({ w }));
+        else words.push({ w: node.textContent, hl: true });
+      });
+      manifest.setAttribute('aria-label', manifest.textContent);
+      manifest.innerHTML = words.map(o => `<span class="mw${o.hl ? ' hl' : ''}" aria-hidden="true">${o.w}</span>`).join(' ');
+    })();
+    const manifestWords = $$('.mw', manifest);
+
+    $$('.reveal').forEach(observe);
+
+    /* ═════════════ Counters ═════════════ */
+    const counterObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        counterObserver.unobserve(entry.target);
+        countUp(entry.target);
+      });
+    }, { threshold: .6 }) : null;
+    function countUp(el) {
+      const target = Number(el.dataset.count), suffix = el.dataset.suffix || '';
+      const t0 = performance.now(), dur = reducedMotion ? 0 : 1800;
+      const step = now => {
+        const t = dur ? clamp((now - t0) / dur, 0, 1) : 1;
+        const v = Math.round(target * (1 - Math.pow(2, -10 * t)));
+        el.textContent = String(t === 1 ? target : v).padStart(2, '0') + suffix;
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
     }
-    window.addEventListener('scroll', () => {
-      if (!scrollScheduled) {
-        scrollScheduled = true;
-        requestAnimationFrame(updateProgress);
+    $$('[data-count]').forEach(el => counterObserver ? counterObserver.observe(el) : countUp(el));
+
+    /* ═════════════ Custom cursor ═════════════ */
+    const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
+    const ring = $('.cursor-ring'), dotEl = $('.cursor-dot');
+    const ringPos = { x: mouse.x, y: mouse.y };
+    if (finePointer && !reducedMotion) {
+      document.body.classList.add('has-cursor');
+      addEventListener('pointermove', e => {
+        mouse.x = e.clientX; mouse.y = e.clientY;
+        dotEl.style.transform = `translate(${mouse.x}px, ${mouse.y}px)`;
+      }, { passive: true });
+      addEventListener('pointerdown', () => ring.classList.add('down'));
+      addEventListener('pointerup', () => ring.classList.remove('down'));
+      document.addEventListener('pointerover', e => {
+        const labeled = e.target.closest('[data-cursor]');
+        const interactive = e.target.closest('a, button, input, select, label');
+        ring.classList.toggle('label', Boolean(labeled) && !(interactive && interactive.matches('.wish, .quick-add, .round-link')));
+        ring.classList.toggle('hover', Boolean(interactive) && !labeled);
+        if (labeled) $('#cursorLabel').textContent = labeled.dataset.cursor;
+      });
+    }
+
+    /* ═════════════ Magnetic buttons ═════════════ */
+    if (finePointer && !reducedMotion) {
+      document.addEventListener('pointermove', e => {
+        const el = e.target.closest('[data-magnetic]');
+        $$('[data-magnetic].magnet-on').forEach(m => {
+          if (m !== el) { m.classList.remove('magnet-on'); m.style.transform = ''; }
+        });
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const x = e.clientX - (r.left + r.width / 2);
+        const y = e.clientY - (r.top + r.height / 2);
+        el.classList.add('magnet-on');
+        el.style.transform = `translate(${x * .3}px, ${y * .4}px)`;
+      }, { passive: true });
+    }
+
+    /* ═════════════ Button ripple ═════════════ */
+    document.addEventListener('pointerdown', e => {
+      const btn = e.target.closest('.btn');
+      if (!btn || btn.disabled || reducedMotion) return;
+      const r = btn.getBoundingClientRect();
+      const s = Math.max(r.width, r.height);
+      const span = document.createElement('span');
+      span.className = 'ripple';
+      Object.assign(span.style, { width: s + 'px', height: s + 'px', left: (e.clientX - r.left - s / 2) + 'px', top: (e.clientY - r.top - s / 2) + 'px' });
+      btn.append(span);
+      setTimeout(() => span.remove(), 700);
+    });
+
+    /* ═════════════ Scramble text ═════════════ */
+    const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ✳#%&@01';
+    $$('[data-scramble]').forEach(el => {
+      const original = el.textContent;
+      let frame = 0, raf;
+      el.addEventListener('mouseenter', () => {
+        if (reducedMotion) return;
+        cancelAnimationFrame(raf);
+        frame = 0;
+        const tick = () => {
+          el.textContent = [...original].map((ch, i) =>
+            i < frame / 2 || ch === ' ' ? ch : glyphs[Math.floor(Math.random() * glyphs.length)]).join('');
+          frame++;
+          if (frame / 2 <= original.length) raf = requestAnimationFrame(tick);
+          else el.textContent = original;
+        };
+        tick();
+      });
+    });
+
+    /* ═════════════ Hero: parallax + tilt ═════════════ */
+    const heroVisual = $('#heroVisual');
+    const heroImg = $('img', heroVisual);
+    const heroTilt = { x: 0, y: 0, tx: 0, ty: 0 };
+    if (finePointer && !reducedMotion) {
+      $('#hero').addEventListener('pointermove', e => {
+        heroTilt.tx = e.clientX / innerWidth - .5;
+        heroTilt.ty = e.clientY / innerHeight - .5;
+      });
+      $('#hero').addEventListener('pointerleave', () => { heroTilt.tx = 0; heroTilt.ty = 0; });
+    }
+
+    // Spotlight в блоке клуба
+    $('#clubCard').addEventListener('pointermove', e => {
+      const r = e.currentTarget.getBoundingClientRect();
+      e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+
+    /* ═════════════ Hero particles ═════════════ */
+    const heroCanvas = $('#heroCanvas');
+    const hctx = heroCanvas.getContext('2d');
+    let particles = [], heroVisible = true, hw = 0, hh = 0;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    function sizeHeroCanvas() {
+      hw = heroCanvas.offsetWidth; hh = heroCanvas.offsetHeight;
+      heroCanvas.width = hw * dpr; heroCanvas.height = hh * dpr;
+      hctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(clamp(hw * hh / 16000, 30, 90));
+      particles = Array.from({ length: n }, () => ({
+        x: Math.random() * hw, y: Math.random() * hh,
+        vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, r: Math.random() * 1.6 + .4
+      }));
+    }
+    function drawParticles() {
+      hctx.clearRect(0, 0, hw, hh);
+      const heroRect = heroCanvas.getBoundingClientRect();
+      const mx = mouse.x - heroRect.left, my = mouse.y - heroRect.top;
+      for (const p of particles) {
+        const dx = p.x - mx, dy = p.y - my, d = Math.hypot(dx, dy);
+        if (d < 140 && d > 0) { p.vx += dx / d * .06; p.vy += dy / d * .06; }
+        p.vx *= .985; p.vy *= .985;
+        p.x += p.vx + (Math.random() - .5) * .05; p.y += p.vy + (Math.random() - .5) * .05;
+        if (p.x < 0) p.x = hw; if (p.x > hw) p.x = 0;
+        if (p.y < 0) p.y = hh; if (p.y > hh) p.y = 0;
       }
-    }, { passive: true });
-    window.addEventListener('resize', updateProgress);
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 120) {
+            hctx.strokeStyle = `rgba(217,255,98,${(1 - d / 120) * .18})`;
+            hctx.lineWidth = .6;
+            hctx.beginPath(); hctx.moveTo(a.x, a.y); hctx.lineTo(b.x, b.y); hctx.stroke();
+          }
+        }
+        hctx.fillStyle = 'rgba(244,243,238,.6)';
+        hctx.beginPath(); hctx.arc(a.x, a.y, a.r, 0, Math.PI * 2); hctx.fill();
+      }
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(([e]) => { heroVisible = e.isIntersecting; }).observe($('#hero'));
+    }
+
+    /* ═════════════ Confetti & bursts (top layer canvas) ═════════════ */
+    const fx = $('#fx');
+    const fctx = fx.getContext('2d');
+    let bits = [], fxRunning = false;
+    const fxColors = ['#d9ff62', '#f4f3ee', '#8b5cf6', '#ffffff', '#b8e04a'];
+    function sizeFx() {
+      fx.width = innerWidth * dpr; fx.height = innerHeight * dpr;
+      fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function spawn(x, y, n, spread, power) {
+      if (reducedMotion) return;
+      for (let i = 0; i < n; i++) {
+        const angle = -Math.PI / 2 + (Math.random() - .5) * spread;
+        const speed = power * (.4 + Math.random() * .8);
+        bits.push({
+          x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          w: 5 + Math.random() * 6, h: 8 + Math.random() * 8, rot: Math.random() * 6, vr: (Math.random() - .5) * .4,
+          c: fxColors[i % fxColors.length], life: 1
+        });
+      }
+      bringToTop(fx);
+      if (!fxRunning) { fxRunning = true; requestAnimationFrame(fxLoop); }
+    }
+    function confetti(n = 150) {
+      spawn(innerWidth * .2, innerHeight + 10, n / 2, 1, 22);
+      spawn(innerWidth * .8, innerHeight + 10, n / 2, 1, 22);
+    }
+    function burst(el, n = 20) {
+      const r = el.getBoundingClientRect();
+      spawn(r.left + r.width / 2, r.top + r.height / 2, n, Math.PI * 2, 7);
+    }
+    function fxLoop() {
+      fctx.clearRect(0, 0, innerWidth, innerHeight);
+      bits = bits.filter(b => b.life > 0 && b.y < innerHeight + 60);
+      for (const b of bits) {
+        b.vy += .35; b.vx *= .99; b.vy *= .99;
+        b.x += b.vx; b.y += b.vy; b.rot += b.vr; b.life -= .006;
+        fctx.save();
+        fctx.globalAlpha = clamp(b.life * 2, 0, 1);
+        fctx.translate(b.x, b.y); fctx.rotate(b.rot);
+        fctx.fillStyle = b.c;
+        fctx.fillRect(-b.w / 2, -b.h / 2, b.w, Math.abs(Math.cos(b.rot * 2)) * b.h + 1);
+        fctx.restore();
+      }
+      if (bits.length) requestAnimationFrame(fxLoop);
+      else {
+        fxRunning = false;
+        fctx.clearRect(0, 0, innerWidth, innerHeight);
+        if (supportsPopover) { try { fx.hidePopover(); } catch {} }
+      }
+    }
+
+    /* ═════════════ Marquees ═════════════ */
+    const marquees = $$('.marquee').map(el => ({
+      el, track: $('.marquee-track', el), dir: Number(el.dataset.dir), x: 0
+    }));
+
+    /* ═════════════ Main animation loop ═════════════ */
+    const header = $('#header');
+    const stackCards = $$('.s-card');
+    const parallaxEls = $$('[data-parallax]');
+    let lastY = scrollY, velocity = 0, lastHeaderY = scrollY;
+
+    function frame() {
+      const y = scrollY;
+      velocity = lerp(velocity, y - lastY, .12);
+      lastY = y;
+      const vh = innerHeight;
+
+      // Прогресс-бар и шапка
+      const distance = document.documentElement.scrollHeight - vh;
+      $('#progress').style.transform = `scaleX(${distance > 0 ? y / distance : 0})`;
+      header.classList.toggle('scrolled', y > 30);
+      if (Math.abs(y - lastHeaderY) > 8) {
+        header.classList.toggle('hide', y > lastHeaderY && y > 300);
+        lastHeaderY = y;
+      }
+
+      // Бегущие строки: скорость и наклон зависят от прокрутки
+      if (!reducedMotion) {
+        const boost = clamp(Math.abs(velocity), 0, 80) * .35;
+        const flip = velocity < -.5 ? -1 : 1;
+        for (const m of marquees) {
+          const half = m.track.scrollWidth / 2;
+          m.x -= (1.1 + boost) * m.dir * flip;
+          if (half) { if (m.x <= -half) m.x += half; if (m.x > 0) m.x -= half; }
+          m.track.style.transform = `translate3d(${m.x}px,0,0) skewX(${clamp(-velocity * .4, -14, 14)}deg)`;
+        }
+      }
+
+      // Горизонтальный лукбук
+      const lr = lookSection.getBoundingClientRect();
+      const lp = clamp(-lr.top / Math.max(1, lookDistance), 0, 1);
+      if (lr.top < vh && lr.bottom > 0) {
+        lookTrack.style.transform = `translate3d(${-lp * lookDistance}px,0,0)`;
+        $('#lookProgress').style.transform = `scaleX(${lp})`;
+        $$('.look', lookTrack).forEach(look => {
+          const r = look.getBoundingClientRect();
+          const c = (r.left + r.width / 2) / innerWidth - .5;
+          $('img', look).style.setProperty('--lx', `${-11.5 + c * -14}%`);
+        });
+      }
+
+      // Манифест
+      const mr = manifest.getBoundingClientRect();
+      const mp = clamp((vh * .85 - mr.top) / (mr.height + vh * .2), 0, 1);
+      const lit = mp * manifestWords.length * 1.1;
+      manifestWords.forEach((w, i) => { w.style.opacity = clamp(lit - i, .12, 1); });
+
+      // Параллакс
+      for (const el of parallaxEls) {
+        const r = el.parentElement.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh) continue;
+        const off = (r.top + r.height / 2 - vh / 2) * Number(el.dataset.parallax);
+        el.style.transform = `translate3d(0,${off}px,0)`;
+      }
+
+      // Стопка карточек
+      stackCards.forEach((card, i) => {
+        const next = stackCards[i + 1];
+        if (!next) return;
+        const stickyTop = parseFloat(getComputedStyle(card).top);
+        const nt = next.getBoundingClientRect().top;
+        const covered = clamp((vh - nt) / (vh - stickyTop), 0, 1);
+        card.style.transform = `scale(${1 - covered * .07})`;
+        card.style.filter = `brightness(${1 - covered * .45})`;
+      });
+
+      // Курсор с инерцией
+      if (document.body.classList.contains('has-cursor')) {
+        ringPos.x = lerp(ringPos.x, mouse.x, .18);
+        ringPos.y = lerp(ringPos.y, mouse.y, .18);
+        ring.style.transform = `translate(${ringPos.x}px, ${ringPos.y}px)`;
+      }
+
+      // Hero: наклон картинки и частицы
+      if (heroVisible) {
+        heroTilt.x = lerp(heroTilt.x, heroTilt.tx, .08);
+        heroTilt.y = lerp(heroTilt.y, heroTilt.ty, .08);
+        heroVisual.style.setProperty('--ry', `${heroTilt.x * 12}deg`);
+        heroVisual.style.setProperty('--rx', `${-heroTilt.y * 12}deg`);
+        heroImg.style.setProperty('--px', `${heroTilt.x * -24}px`);
+        heroImg.style.setProperty('--py', `${heroTilt.y * -24 + y * .08}px`);
+        if (!reducedMotion) drawParticles();
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    /* ═════════════ Clock ═════════════ */
+    function tickClock() {
+      const t = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
+      $('#clock').textContent = 'MSK ' + t;
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    /* ═════════════ Preloader ═════════════ */
+    function finishLoading() {
+      $('#loader').classList.add('done');
+      document.body.classList.remove('loading');
+      setTimeout(() => document.body.classList.add('ready'), 250);
+      setTimeout(() => $('#loader').remove(), 1400);
+    }
+    function runLoader() {
+      if (reducedMotion) return finishLoading();
+      const t0 = performance.now(), dur = 1600;
+      const step = now => {
+        const t = clamp((now - t0) / dur, 0, 1);
+        const e = 1 - Math.pow(1 - t, 3);
+        $('#loaderCount').textContent = String(Math.round(e * 100)).padStart(3, '0');
+        $('#loaderBar').style.width = e * 100 + '%';
+        if (t < 1) requestAnimationFrame(step);
+        else setTimeout(finishLoading, 200);
+      };
+      requestAnimationFrame(step);
+    }
+
+    /* ═════════════ Init ═════════════ */
+    function onResize() {
+      sizeLookbook();
+      sizeHeroCanvas();
+      sizeFx();
+      moveChipPill();
+    }
+    addEventListener('resize', onResize);
+    addEventListener('load', sizeLookbook);
 
     $('#year').textContent = new Date().getFullYear();
     renderProducts();
     renderCart();
     updateProfile();
-    updateProgress();
+    onResize();
+    if (document.fonts) document.fonts.ready.then(onResize);
+    requestAnimationFrame(frame);
+    runLoader();
   </script>
 </body>
 </html>
