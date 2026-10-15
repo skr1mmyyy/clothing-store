@@ -1021,6 +1021,38 @@
 
     const findProduct = id => products.find(p => p.id === Number(id));
 
+    // Если фото не загрузилось — рисуем фирменный постер вместо пустого места.
+    function posterFallback(img) {
+      const label = (img.alt || 'NOIR').split(',')[0].toUpperCase().slice(0, 22);
+      let hash = 0;
+      for (const ch of label) hash = (hash * 31 + ch.charCodeAt(0)) % 360;
+      const hue = (hash + 60) % 360;
+      const words = label.split(' ');
+      const lines = words.map((w, i) =>
+        `<text x="40" y="${560 - (words.length - 1 - i) * 74}" font-family="Unbounded,Arial Black,sans-serif" font-weight="900" font-size="66" letter-spacing="-3" fill="#f4f3ee">${w.replace(/[<&>]/g, '')}</text>`).join('');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="g" cx="30%" cy="25%" r="90%"><stop offset="0" stop-color="hsl(${hue},55%,42%)"/><stop offset=".55" stop-color="hsl(${(hue + 40) % 360},35%,16%)"/><stop offset="1" stop-color="#0b0b0b"/></radialGradient>
+          <pattern id="p" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="14" stroke="#ffffff" stroke-opacity=".05" stroke-width="2"/></pattern>
+        </defs>
+        <rect width="600" height="800" fill="url(#g)"/><rect width="600" height="800" fill="url(#p)"/>
+        <circle cx="450" cy="230" r="150" fill="none" stroke="#d9ff62" stroke-opacity=".7" stroke-width="2"/>
+        <text x="450" y="290" text-anchor="middle" font-size="170" fill="#d9ff62" font-family="Arial">✳</text>
+        <text x="40" y="70" font-family="Manrope,Arial,sans-serif" font-weight="800" font-size="20" letter-spacing="5" fill="#f4f3ee" fill-opacity=".8">NOIR / DROP 001</text>
+        ${lines}
+        <text x="40" y="620" font-family="Manrope,Arial,sans-serif" font-weight="700" font-size="18" letter-spacing="4" fill="#d9ff62">URBAN FORMS ✳ UNISEX</text>
+      </svg>`;
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+    document.addEventListener('error', event => {
+      const img = event.target;
+      if (img.tagName === 'IMG' && !img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        posterFallback(img);
+      }
+    }, true);
+    $$('img').forEach(img => { if (img.complete && !img.naturalWidth && img.src) { img.dataset.fallback = '1'; posterFallback(img); } });
+
     /* ═════════════ Storage ═════════════ */
     function read(key, fallback) {
       try {
