@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тракт Логистика</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: ночная трасса. Full-bleed сцены-полосы (дорога, склад, карта, порт), текст в узкой колонке между ними. Единый тёмный вид по замыслу. */
+:root{
+  --night:#0e1218; --asphalt:#1b2029; --panel:#151a22; --line:#2a313c;
+  --fg:#e8ecef; --muted:#8d97a5; --amber:#ffb21a; --amber-dim:#a8700a;
+  --red:#ff5a3c; --glass:#86bbdc; --ok:#4fd18b;
+  --f-display:"Oswald","Arial Narrow",Impact,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--night);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--night)}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.01em;line-height:1.02;margin:0;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.lead{color:var(--muted);max-width:60ch}
+section{padding-block:72px}
+.sec-head{display:grid;gap:12px;margin-bottom:36px}
+.sec-head h2{font-size:clamp(32px,5vw,56px)}
+button,.btn{font:600 15px/1 var(--f-body);border:0;border-radius:6px;padding:14px 20px;cursor:pointer;background:var(--amber);color:#14110a;transition:transform .15s,background .15s}
+button:hover{background:#ffc54d}
+button:active{transform:translateY(1px) scale(.98)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+
+/* scroll progress */
+.progress{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;height:4px;background:var(--line);z-index:20}
+.progress i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--amber) 0 14px,transparent 14px 22px)}
+.progress b{position:absolute;top:-1px;left:0;width:10px;height:6px;background:var(--amber);border-radius:2px;box-shadow:0 0 10px var(--amber);transform:translateX(-50%)}
+
+/* HERO */
+.hero{padding-block:48px 0}
+.hero-top{display:grid;gap:14px;margin-bottom:28px}
+.hero h1{font-size:clamp(40px,8vw,96px)}
+.hero h1 span{display:inline-block;animation:drop .7s cubic-bezier(.2,1.4,.4,1) both}
+.hero h1 em{font-style:normal;color:var(--amber)}
+@keyframes drop{from{transform:translateY(-40px);opacity:0}}
+.stage{position:relative;height:460px;overflow:hidden;background:linear-gradient(#0a0e15 0%,#141c2b 55%,#2a2433 78%,#3a2a2c 100%);border-block:1px solid var(--line);user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.stars{position:absolute;inset:0 0 40% 0;background-image:radial-gradient(1px 1px at 12% 20%,#fff9 50%,transparent 51%),radial-gradient(1px 1px at 33% 12%,#fff7 50%,transparent 51%),radial-gradient(1.5px 1.5px at 58% 28%,#fffa 50%,transparent 51%),radial-gradient(1px 1px at 72% 8%,#fff6 50%,transparent 51%),radial-gradient(1px 1px at 88% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 46% 40%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 22% 44%,#fff5 50%,transparent 51%);animation:twinkle 4s ease-in-out infinite alternate}
+@keyframes twinkle{to{opacity:.45}}
+.moon{position:absolute;top:44px;right:12%;width:54px;height:54px;border-radius:50%;background:#f3ead2;box-shadow:0 0 60px 12px #f3ead233;}
+.moon::after{content:"";position:absolute;inset:0 0 0 14px;border-radius:50%;background:#141c2b;transform:translateX(10px)}
+.cloud{position:absolute;height:14px;border-radius:14px;background:#ffffff0d;animation:cloud linear infinite}
+@keyframes cloud{from{transform:translateX(-30vw)}to{transform:translateX(110vw)}}
+.layer{position:absolute;left:0;right:0;background-repeat:repeat-x;background-position:0 100%}
+.far{bottom:118px;height:170px}
+.mid{bottom:112px;height:150px}
+.road{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(var(--asphalt),#12161d);border-top:3px solid #3a414c}
+.road .dashes{position:absolute;left:0;right:0;top:56px;height:5px;background:repeating-linear-gradient(90deg,#d8d2b8 0 46px,transparent 46px 92px);opacity:.8}
+.road .edge{position:absolute;left:0;right:0;bottom:12px;height:3px;background:#d8d2b855}
+.depot{position:absolute;left:0;bottom:120px;width:230px;height:170px}
+.depot .bld{position:absolute;inset:20px 0 0 0;background:#232a35;border:2px solid #313a47;border-bottom:0}
+.depot .roof{position:absolute;left:-8px;right:-8px;top:8px;height:16px;background:#2f3845;clip-path:polygon(4% 0,96% 0,100% 100%,0 100%)}
+.depot .gate{position:absolute;left:24px;right:24px;bottom:0;height:96px;background:repeating-linear-gradient(#3a4452 0 8px,#2c3440 8px 11px);border:3px solid #48525f;border-bottom:0}
+.depot .sign{position:absolute;left:24px;top:32px;font:700 15px/1 var(--f-display);letter-spacing:.12em;color:var(--amber);text-shadow:0 0 12px #ffb21a88;animation:neon 3s infinite}
+@keyframes neon{0%,92%,100%{opacity:1}94%{opacity:.3}96%{opacity:1}97%{opacity:.4}}
+.depot .lamp{position:absolute;right:20px;top:34px;width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 30px 10px #ffb21a55}
+
+.truck{position:absolute;left:0;bottom:28px;width:min(360px,74vw);cursor:grab;z-index:3;touch-action:none;will-change:transform}
+.truck:active{cursor:grabbing}
+.truck svg{display:block;width:100%;height:auto;overflow:visible}
+.truck-svg .spin{transform:rotate(var(--rot,0deg));transform-origin:0 0}
+.truck-svg .beam{opacity:0;transition:opacity .3s}
+.truck-svg .hl{fill:#7d7765;transition:fill .2s}
+.truck.on .truck-svg .beam{opacity:1}
+.truck.on .truck-svg .hl{fill:#fff6d0}
+.truck.shake .body{animation:shake .08s linear infinite}
+@keyframes shake{50%{transform:translateY(1.2px)}}
+.truck.drive .body{animation:bump .35s ease-in-out infinite}
+@keyframes bump{50%{transform:translateY(-1px)}}
+.truck::after{content:"";position:absolute;left:4%;right:2%;bottom:-6px;height:12px;border-radius:50%;background:#0007;filter:blur(4px);z-index:-1}
+
+.puff{position:absolute;width:16px;height:16px;border-radius:50%;background:#bfc5cc;pointer-events:none;z-index:4;animation:puff 1.1s ease-out forwards}
+@keyframes puff{from{transform:translate(0,0) scale(.4);opacity:.7}to{transform:translate(-50px,-60px) scale(3.2);opacity:0}}
+.dust{position:absolute;width:8px;height:8px;border-radius:50%;background:#8a7a66;pointer-events:none;z-index:2;animation:dust .7s ease-out forwards}
+@keyframes dust{from{opacity:.6;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(-70px,-14px) scale(2.4)}}
+
+.hint{position:absolute;left:50%;top:28%;transform:translateX(-30%);z-index:5;display:flex;align-items:center;gap:12px;font:500 18px/1.2 var(--f-display);text-transform:uppercase;letter-spacing:.06em;color:var(--fg);pointer-events:none;transition:opacity .4s}
+.hint .arrow{display:flex;gap:4px}
+.hint .arrow i{width:14px;height:14px;border-top:3px solid var(--amber);border-right:3px solid var(--amber);transform:rotate(45deg);animation:chev 1.2s infinite}
+.hint .arrow i:nth-child(2){animation-delay:.15s}.hint .arrow i:nth-child(3){animation-delay:.3s}
+@keyframes chev{0%,100%{opacity:.2}40%{opacity:1}}
+.hint.wiggle{animation:wiggle .5s}
+@keyframes wiggle{20%,60%{transform:translateX(calc(-30% - 8px))}40%,80%{transform:translateX(calc(-30% + 8px))}}
+.hint.gone{opacity:0}
+.hud{position:absolute;top:16px;left:max(16px,env(safe-area-inset-left,0px));z-index:5;display:flex;gap:18px;font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hud b{display:block;font-size:22px;color:var(--fg);font-weight:600}
+.done{position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:#0e1218b3;backdrop-filter:blur(3px);padding:16px;text-align:center}
+.done>div{display:grid;gap:14px;justify-items:center;animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.done h3{font-size:clamp(28px,5vw,44px);color:var(--amber)}
+.done p{color:var(--muted);font-family:var(--f-mono);font-size:13px}
+.push{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding-block:18px 0;font-family:var(--f-mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.rail{position:relative;height:10px;background:var(--panel);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.rail i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--amber-dim),var(--amber));transition:width .08s}
+#pushPct{font-variant-numeric:tabular-nums;min-width:4ch;text-align:right;color:var(--fg)}
+
+/* marquee */
+.marquee{overflow:hidden;border-block:1px solid var(--line);background:var(--amber);color:#14110a;margin-top:56px}
+.marquee div{display:flex;gap:40px;width:max-content;padding-block:14px;font:700 22px/1 var(--f-display);text-transform:uppercase;letter-spacing:.06em;animation:marq 26s linear infinite}
+.marquee span::after{content:"◆";margin-left:40px;font-size:12px;vertical-align:middle}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.stat{background:var(--night);padding:24px 20px;display:grid;gap:4px}
+.stat b{font:700 clamp(36px,5vw,56px)/1 var(--f-display);color:var(--fg);font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:14px}
+
+/* warehouse */
+.ware{position:relative;height:300px;margin-top:40px;background:linear-gradient(#141a23,#10151c);border-block:1px solid var(--line);overflow:hidden}
+.ware .shelf{position:absolute;top:24px;height:150px;width:120px;border:3px solid #3a4452;border-top-width:4px;display:grid;grid-template-rows:repeat(3,1fr)}
+.ware .shelf div{border-bottom:3px solid #3a4452;display:flex;align-items:flex-end;gap:4px;padding:0 6px}
+.ware .shelf i{width:26px;height:24px;background:#b68b55;border:1px solid #8a6538}
+.belt{position:absolute;left:0;right:0;bottom:60px;height:60px}
+.belt .band{position:absolute;left:0;right:0;bottom:0;height:16px;background:#2a313c;border-block:2px solid #3e4755}
+.belt .rollers{position:absolute;left:0;right:0;bottom:-14px;height:16px;display:flex;justify-content:space-around}
+.belt .rollers i{width:14px;height:14px;border-radius:50%;background:#48525f;position:relative;animation:spin 1s linear infinite}
+.belt .rollers i::after{content:"";position:absolute;left:6px;top:1px;width:2px;height:12px;background:#222}
+.box{position:absolute;bottom:16px;left:-70px;width:56px;height:44px;background:#c39459;border:1px solid #8a6538;animation:belt 9s linear infinite}
+.box::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:10px;margin-left:-5px;background:#e3c79a88}
+.box::after{content:"↑↑";position:absolute;right:4px;bottom:2px;font:600 9px/1 var(--f-mono);color:#5a3f1e}
+@keyframes belt{to{left:105%}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.forklift{position:absolute;bottom:4px;left:10%;width:120px;animation:fork 8s ease-in-out infinite}
+.forklift .forks{animation:lift 8s ease-in-out infinite}
+@keyframes fork{0%,10%{transform:translateX(0)}45%,55%{transform:translateX(min(40vw,420px))}90%,100%{transform:translateX(0)}}
+@keyframes lift{0%,12%,88%,100%{transform:translateY(0)}25%,75%{transform:translateY(-22px)}}
+.forklift .wh{animation:spin 1s linear infinite;transform-box:fill-box;transform-origin:center}
+.scanner{position:absolute;right:14%;bottom:120px;width:4px;height:70px;background:var(--red);box-shadow:0 0 14px var(--red);animation:scan 1.4s ease-in-out infinite alternate;opacity:.7}
+@keyframes scan{to{transform:translateX(40px)}}
+
+/* steps */
+.steps{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.steps .track{position:absolute;left:22px;right:22px;top:22px;height:4px;background:var(--line)}
+.steps .track i{display:block;height:100%;width:0;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.step{position:relative;display:grid;gap:10px;align-content:start}
+.step .n{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--panel);border:2px solid var(--line);font:700 20px/1 var(--f-display);transition:background .3s,border-color .3s,color .3s,transform .3s}
+.step.on .n{background:var(--amber);border-color:var(--amber);color:#14110a;transform:scale(1.1)}
+.step h3{font-size:22px}
+.step p{color:var(--muted);font-size:15px}
+
+/* map */
+.map{overflow-x:auto;border:1px solid var(--line);background:radial-gradient(circle at 30% 40%,#18202c,#10151c)}
+.map svg{display:block;width:100%;min-width:640px;height:auto}
+.map .route{fill:none;stroke:var(--amber);stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 2.6s ease-in-out}
+.map.pre .route{stroke-dashoffset:1}
+.map .ghost{fill:none;stroke:#2c3542;stroke-width:9;stroke-linecap:round}
+.map .city circle.dot{fill:var(--fg)}
+.map .city circle.pulse{fill:none;stroke:var(--amber);animation:pulse 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(3);opacity:0}}
+.map text{fill:var(--fg);font-family:var(--f-body);font-size:14px;font-weight:600}
+.map text.km{fill:var(--muted);font-family:var(--f-mono);font-size:11px;font-weight:400}
+.map .grid line{stroke:#ffffff08}
+
+/* tracking */
+.trackbox{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:32px;align-items:start}
+.trackform{display:grid;gap:12px;background:var(--panel);border:1px solid var(--line);padding:24px;border-radius:8px}
+.trackform label{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.trackform input{font:600 20px/1 var(--f-mono);background:var(--night);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:14px;width:100%;letter-spacing:.06em}
+.trackform .err{color:var(--red);font-size:14px;min-height:1.4em}
+.trip{display:grid;gap:18px;min-width:0}
+.trip .line{position:relative;height:56px}
+.trip .line::before{content:"";position:absolute;left:0;right:0;bottom:8px;height:4px;background:repeating-linear-gradient(90deg,var(--line) 0 10px,transparent 10px 16px)}
+.trip .line .fill{position:absolute;left:0;bottom:8px;height:4px;width:0;background:var(--amber);transition:width .8s ease-in-out}
+.trip .mini{position:absolute;bottom:10px;left:0;width:84px;transform:translateX(-50%);transition:left .8s ease-in-out}
+.trip .mini svg{width:100%;height:auto;display:block;overflow:visible}
+.trip.moving .mini .spin{animation:spin .5s linear infinite}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:0;border-left:2px solid var(--line)}
+.log li{position:relative;padding:8px 0 8px 20px;display:grid;grid-template-columns:110px 1fr;gap:12px;animation:slide .4s ease-out}
+.log li::before{content:"";position:absolute;left:-7px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--night);border:2px solid var(--amber)}
+.log li:last-child::before{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.log li.ok::before{background:var(--ok);border-color:var(--ok);box-shadow:0 0 10px var(--ok)}
+.log time{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.log b{font-weight:600}
+.log small{display:block;color:var(--muted);font-size:14px}
+@keyframes slide{from{opacity:0;transform:translateX(-12px)}}
+
+/* fleet */
+.fleet{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:24px;display:grid;gap:16px;transition:border-color .3s,transform .3s;overflow:hidden}
+.card:hover{border-color:var(--amber);transform:translateY(-4px)}
+.card .pic{height:110px;display:flex;align-items:flex-end;border-bottom:3px solid #3a414c;position:relative;overflow:hidden}
+.card .pic svg{height:92px;width:auto;overflow:visible;transition:transform 1.2s cubic-bezier(.5,0,.3,1)}
+.card:hover .pic svg{transform:translateX(30px)}
+.card:hover .spin{animation:spin .5s linear infinite}
+.card .pic::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:2px;background:repeating-linear-gradient(90deg,#d8d2b866 0 20px,transparent 20px 40px);animation:none}
+.card:hover .pic::after{animation:roadmove .4s linear infinite}
+@keyframes roadmove{to{background-position:-40px 0}}
+.card h3{font-size:26px}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px}
+.card dt{color:var(--muted)}
+.card dd{margin:0;text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* port / footer */
+.port{position:relative;height:240px;overflow:hidden;background:linear-gradient(#0e1218,#132033)}
+.crane{position:absolute;right:12%;bottom:70px;width:160px;height:170px}
+.crane .hook{animation:hook 6s ease-in-out infinite}
+@keyframes hook{0%,100%{transform:translateY(0)}50%{transform:translateY(46px)}}
+.ship{position:absolute;bottom:38px;left:0;width:300px;animation:sail 30s linear infinite}
+.ship svg{display:block;width:100%;height:auto;animation:bob 3s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes sail{from{transform:translateX(-320px)}to{transform:translateX(105vw)}}
+@keyframes bob{50%{transform:translateY(4px) rotate(1.2deg)}}
+.waves{position:absolute;left:0;right:0;height:60px;bottom:0;background:repeating-radial-gradient(circle at 20px -8px,transparent 0 16px,#1d3a5a 17px 20px,transparent 21px 40px);background-size:40px 22px;animation:wave 3s linear infinite;opacity:.8}
+.waves.w2{bottom:-8px;opacity:.5;animation-duration:5s;animation-direction:reverse}
+@keyframes wave{to{background-position:40px 0}}
+.highway{position:relative;height:70px;background:var(--asphalt);overflow:hidden;border-top:3px solid #3a414c}
+.highway .dashes{position:absolute;left:0;right:0;top:33px;height:3px;background:repeating-linear-gradient(90deg,#d8d2b8aa 0 30px,transparent 30px 60px)}
+.car{position:absolute;left:0;animation:car linear infinite}
+.car.top{top:8px}.car.bot{top:40px;animation-direction:reverse}
+.car.bot svg{transform:scaleX(-1)}
+@keyframes car{from{transform:translateX(-140px)}to{transform:translateX(105vw)}}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-block:40px;color:var(--muted);font-size:14px}
+footer b{display:block;font:700 28px/1 var(--f-display);color:var(--fg);text-transform:uppercase;margin-bottom:6px}
+footer .phone{font-family:var(--f-mono);color:var(--fg);font-size:18px;user-select:all}
+
+@media (max-width:860px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:1fr 1fr}
+  .steps .track{display:none}
+  .trackbox{grid-template-columns:1fr}
+  .fleet{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .stage{height:380px}
+  .hint{font-size:14px;top:22%;left:40%}
+  .depot{transform-origin:0 100%}
+  .steps{grid-template-columns:1fr}
+  .log li{grid-template-columns:1fr;gap:2px}
+  section{padding-block:56px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+
+</head>
+<body>
+<div class="progress" aria-hidden="true"><i id="progFill"></i><b id="progDot"></b></div>
+
+<header class="hero">
+  <div class="wrap hero-top">
+    <div class="eyebrow">Тракт · грузоперевозки по России с 2009 года</div>
+    <h1 id="heroTitle">Фура стоит. <em>Толкни её.</em></h1>
+    <p class="lead">Возьми грузовик мышкой (или пальцем) и тащи вправо. Наберёшь достаточно силы — заведётся двигатель, и рейс уйдёт в Новосибирск.</p>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="stars"></div>
+    <div class="moon"></div>
+    <div class="cloud" style="top:70px;width:180px;animation-duration:70s"></div>
+    <div class="cloud" style="top:120px;width:120px;animation-duration:50s;animation-delay:-20s"></div>
+    <div class="cloud" style="top:40px;width:240px;animation-duration:90s;animation-delay:-55s"></div>
+    <div class="layer far" id="far"></div>
+    <div class="layer mid" id="mid"></div>
+    <div class="depot" id="depot">
+      <div class="roof"></div>
+      <div class="bld"></div>
+      <div class="sign">СКЛАД №3</div>
+      <div class="lamp"></div>
+      <div class="gate"></div>
+    </div>
+    <div class="road"><div class="dashes" id="dashes"></div><div class="edge"></div></div>
+    <div class="hud" aria-live="polite">
+      <div>Скорость<b id="hudSpeed">0 км/ч</b></div>
+      <div>Пройдено<b id="hudKm">0 км</b></div>
+    </div>
+    <div class="hint" id="hint"><span>Тяни фуру вправо</span><span class="arrow"><i></i><i></i><i></i></span></div>
+    <div class="truck" id="truck" tabindex="0" role="button" aria-label="Фура. Тяните вправо или нажимайте стрелку вправо"></div>
+    <div class="done" id="done" hidden>
+      <div>
+        <div class="eyebrow">Рейс ТР-4821-77 отправлен</div>
+        <h3>Груз в пути</h3>
+        <p>Москва → Новосибирск · 3 380 км · прибытие через 4 суток</p>
+        <button id="again" type="button">Подогнать новую фуру</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap push">
+    <span>Сила толчка</span>
+    <div class="rail"><i id="railFill"></i></div>
+    <span id="pushPct">0%</span>
+  </div>
+
+  <div class="marquee" aria-hidden="true"><div id="marq"></div></div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Цифры за 2025 год</div>
+        <h2>Каждый день на трассе</h2>
+      </div>
+      <div class="stats">
+        <div class="stat"><b data-to="1240">1240</b><span>рейсов в месяц</span></div>
+        <div class="stat"><b data-to="98.7" data-dec="1" data-suf="%">98.7%</b><span>доставок точно в срок</span></div>
+        <div class="stat"><b data-to="86">86</b><span>городов в сети</span></div>
+        <div class="stat"><b data-to="312">312</b><span>машин собственного парка</span></div>
+      </div>
+    </div>
+    <div class="ware" aria-hidden="true">
+      <div class="shelf" style="left:6%"><div><i></i><i></i><i></i></div><div><i></i><i></i></div><div><i></i><i></i><i></i></div></div>
+      <div class="shelf" style="left:calc(6% + 140px)"><div><i></i></div><div><i></i><i></i><i></i></div><div><i></i><i></i></div></div>
+      <div class="shelf" style="right:6%"><div><i></i><i></i></div><div><i></i></div><div><i></i><i></i><i></i></div></div>
+      <div class="scanner"></div>
+      <div class="belt">
+        <div class="box" style="animation-delay:0s"></div>
+        <div class="box" style="animation-delay:-3s;width:44px;height:36px"></div>
+        <div class="box" style="animation-delay:-6s;width:64px"></div>
+        <div class="band"></div>
+        <div class="rollers"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <svg class="forklift" viewBox="0 0 120 70">
+        <g class="forks"><rect x="98" y="10" width="4" height="50" fill="#6b7380"/><rect x="100" y="56" width="20" height="4" fill="#9aa4b1"/><rect x="102" y="32" width="18" height="24" fill="#c39459" stroke="#8a6538"/></g>
+        <path d="M10 30 H60 L76 12 H90 V60 H10 Z" fill="#ffb21a"/>
+        <path d="M62 30 L76 16 H86 V30 Z" fill="#86bbdc" opacity=".7"/>
+        <rect x="4" y="34" width="14" height="22" fill="#3a414c"/>
+        <circle class="wh" cx="26" cy="60" r="9" fill="#0b0d10"/><rect class="wh" x="24" y="53" width="4" height="14" fill="#48525f"/>
+        <circle class="wh" cx="78" cy="60" r="9" fill="#0b0d10"/><rect class="wh" x="76" y="53" width="4" height="14" fill="#48525f"/>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Как идёт груз</div>
+        <h2>Четыре шага до получателя</h2>
+      </div>
+      <div class="steps" id="steps">
+        <div class="track"><i id="stepFill"></i></div>
+        <div class="step"><div class="n">1</div><h3>Заявка</h3><p>Оставляете маршрут, вес и габариты. Ставку называем за 15 минут.</p></div>
+        <div class="step"><div class="n">2</div><h3>Погрузка</h3><p>Машина приходит к окну на складе. Пломбируем кузов, фотографируем груз.</p></div>
+        <div class="step"><div class="n">3</div><h3>Трасса</h3><p>GPS-трекер обновляет позицию каждые 5 минут. Водитель на связи круглосуточно.</p></div>
+        <div class="step"><div class="n">4</div><h3>Сдача</h3><p>Получатель подписывает ТТН, скан накладной приходит вам в тот же день.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Главная магистраль</div>
+        <h2>Москва — Новосибирск</h2>
+        <p class="lead">Самое загруженное направление: М-7, М-12 и Р-254. Ежедневные отправки, сборные грузы от одной палеты.</p>
+      </div>
+      <div class="map pre" id="map">
+        <svg viewBox="0 0 820 300" role="img" aria-label="Маршрут Москва, Казань, Екатеринбург, Тюмень, Омск, Новосибирск">
+          <g class="grid" id="grid"></g>
+          <path class="ghost" d="M60 190 Q150 140 240 160 T430 120 Q470 110 510 140 T620 150 Q690 140 760 180"/>
+          <path class="route" id="routePath" pathLength="1" d="M60 190 Q150 140 240 160 T430 120 Q470 110 510 140 T620 150 Q690 140 760 180"/>
+          <g id="cities"></g>
+          <g id="mapTruck">
+            <rect x="-14" y="-7" width="20" height="12" rx="1" fill="#e8ecef"/>
+            <rect x="6" y="-4" width="9" height="9" rx="1" fill="#ffb21a"/>
+            <animateMotion dur="14s" repeatCount="indefinite" rotate="auto"><mpath href="#routePath"/></animateMotion>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Трекинг</div>
+        <h2>Где мой груз</h2>
+      </div>
+      <div class="trackbox">
+        <form class="trackform" id="trackForm" novalidate>
+          <label for="trackInput">Номер накладной</label>
+          <input id="trackInput" value="ТР-4821-77" autocomplete="off" spellcheck="false">
+          <div class="err" id="trackErr" role="alert"></div>
+          <button type="submit">Отследить</button>
+          <p class="lead" style="font-size:14px">Пример накладной. Нажмите «Отследить», чтобы проиграть маршрут.</p>
+        </form>
+        <div class="trip" id="trip">
+          <div class="line"><div class="fill" id="tripFill"></div><div class="mini" id="tripTruck"></div></div>
+          <ol class="log" id="log"></ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Автопарк</div>
+        <h2>Под любой груз</h2>
+        <p class="lead">Наведите на машину.</p>
+      </div>
+      <div class="fleet" id="fleet"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="port" aria-hidden="true">
+    <svg class="crane" viewBox="0 0 160 170">
+      <rect x="20" y="20" width="8" height="150" fill="#ff5a3c"/>
+      <rect x="60" y="20" width="8" height="150" fill="#ff5a3c"/>
+      <rect x="0" y="14" width="160" height="10" fill="#ff5a3c"/>
+      <path d="M20 60 L68 100 M68 60 L20 100" stroke="#ff5a3c" stroke-width="3"/>
+      <g class="hook"><line x1="120" y1="24" x2="120" y2="60" stroke="#8d97a5" stroke-width="2"/><rect x="96" y="60" width="48" height="22" fill="#4fd18b"/><rect x="96" y="60" width="48" height="22" fill="none" stroke="#2d8a57" stroke-dasharray="2 6"/></g>
+    </svg>
+    <div class="ship">
+      <svg viewBox="0 0 300 90">
+        <rect x="40" y="10" width="34" height="22" fill="#ffb21a"/><rect x="78" y="10" width="34" height="22" fill="#ff5a3c"/><rect x="116" y="10" width="34" height="22" fill="#86bbdc"/><rect x="154" y="10" width="34" height="22" fill="#4fd18b"/>
+        <rect x="40" y="34" width="34" height="22" fill="#86bbdc"/><rect x="78" y="34" width="34" height="22" fill="#ffb21a"/><rect x="116" y="34" width="34" height="22" fill="#e8ecef"/><rect x="154" y="34" width="34" height="22" fill="#ff5a3c"/><rect x="192" y="34" width="34" height="22" fill="#ffb21a"/>
+        <rect x="232" y="16" width="28" height="40" fill="#e8ecef"/><rect x="236" y="22" width="20" height="6" fill="#86bbdc"/>
+        <path d="M10 58 H296 L276 88 H30 Z" fill="#2b3645"/>
+        <rect x="10" y="58" width="286" height="5" fill="#ff5a3c"/>
+      </svg>
+    </div>
+    <div class="waves"></div><div class="waves w2"></div>
+  </div>
+  <div class="highway" id="highway" aria-hidden="true"><div class="dashes"></div></div>
+  <div class="wrap">
+    <div><b>Тракт</b>Грузоперевозки по России и СНГ. Демо-сайт.</div>
+    <div>Диспетчерская, круглосуточно<div class="phone">8 800 000-00-00</div></div>
+  </div>
+</footer>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- truck drawing ---------- */
+function truckSVG({cab='#ffb21a',trailer='#e8ecef',label='ТРАКТ',sub='грузоперевозки',tw=226,ref=false}={}){
+  const tx=230-tw, vbx=tx-6, w=[];
+  const tWheels=tw>150?[tx+38,tx+74,196]:[tx+40];
+  [...tWheels,262,306].forEach(x=>w.push(`<g transform="translate(${x} 108)"><circle r="16" fill="#0b0d10"/><g class="spin"><circle r="9" fill="#9aa4b1"/><circle r="3" fill="#2a313c"/><path d="M0-9V9M-9 0H9" stroke="#2a313c" stroke-width="2"/></g></g>`));
+  let ribs='';for(let x=tx+28;x<230;x+=28)ribs+=`<line x1="${x}" y1="12" x2="${x}" y2="86" stroke="#0002"/>`;
+  return `<svg class="truck-svg" viewBox="${vbx} 0 ${340-vbx} 130" aria-hidden="true">
+  <defs><linearGradient id="bm${tw}${cab.slice(1)}" x1="0" x2="1"><stop offset="0" stop-color="#fff6d0" stop-opacity=".55"/><stop offset="1" stop-color="#fff6d0" stop-opacity="0"/></linearGradient></defs>
+  <polygon class="beam" points="329,80 560,62 560,112" fill="url(#bm${tw}${cab.slice(1)})"/>
+  <g class="body">
+    <rect x="${tx}" y="8" width="${tw}" height="84" rx="3" fill="${trailer}"/>${ribs}
+    ${ref?`<rect x="216" y="18" width="14" height="44" fill="#9aa4b1"/>`:''}
+    <text x="${tx+tw/2}" y="${tw>150?56:54}" text-anchor="middle" font-family="Oswald,Arial Narrow,sans-serif" font-weight="700" font-size="${tw>150?28:20}" letter-spacing="3" fill="#12161c">${label}</text>
+    <text x="${tx+tw/2}" y="${tw>150?74:70}" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="10" letter-spacing="2" fill="#12161c99">${sub}</text>
+    <line x1="${tx+2}" y1="88" x2="228" y2="88" stroke="#ff5a3c" stroke-width="3" stroke-dasharray="10 6"/>
+    <rect x="${tx-2}" y="78" width="4" height="9" fill="#ff5a3c"/>
+    <rect x="${tx+4}" y="92" width="${tw-8}" height="7" fill="#20252d"/>
+    <rect x="226" y="94" width="14" height="6" fill="#20252d"/>
+    <rect x="240" y="4" width="5" height="26" rx="1" fill="#6b7380"/>
+    <path d="M236 28 L236 12 H260 Q274 14 286 28 Z" fill="${cab}" opacity=".8"/>
+    <path d="M236 28 H288 Q300 28 308 40 L322 66 Q328 72 328 82 V102 H236 Z" fill="${cab}"/>
+    <path d="M292 36 H302 Q306 36 309 42 L320 64 H292 Z" fill="#86bbdc"/>
+    <path d="M286 36 V98" stroke="#0003" stroke-width="2"/>
+    <rect x="276" y="68" width="8" height="3" fill="#0004"/>
+    <rect x="320" y="86" width="9" height="12" fill="#20252d"/>
+    <rect class="hl" x="322" y="76" width="7" height="7" rx="1"/>
+    <rect x="236" y="98" width="96" height="6" fill="#2a313c"/>
+  </g>
+  ${w.join('')}
+  </svg>`;
+}
+
+/* ---------- hero backgrounds ---------- */
+function svgURL(s){return `url("data:image/svg+xml,${encodeURIComponent(s)}")`}
+(function buildLayers(){
+  let r=7;const rnd=()=>(r=(r*9301+49297)%233280)/233280;
+  let b='',x=0;
+  while(x<900){const w=30+rnd()*60,h=40+rnd()*120;b+=`<rect x="${x}" y="${170-h}" width="${w}" height="${h}" fill="#1a2231"/>`;
+    for(let wy=170-h+8;wy<160;wy+=14)for(let wx=x+6;wx<x+w-8;wx+=12)if(rnd()>.72)b+=`<rect x="${wx}" y="${wy}" width="5" height="6" fill="#ffb21a" opacity="${(.25+rnd()*.5).toFixed(2)}"/>`;
+    x+=w+4+rnd()*20;}
+  $('#far').style.backgroundImage=svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="170">${b}</svg>`);
+  const mid=`<svg xmlns="http://www.w3.org/2000/svg" width="440" height="150">
+   <rect x="58" y="22" width="4" height="128" fill="#2f3845"/><path d="M60 24 H96" stroke="#2f3845" stroke-width="4"/>
+   <circle cx="96" cy="30" r="22" fill="#ffb21a" opacity=".12"/><rect x="88" y="26" width="16" height="5" rx="2" fill="#ffd27a"/>
+   <polygon points="210,150 240,60 270,150" fill="#151b24"/><polygon points="250,150 272,90 294,150" fill="#121821"/>
+   <polygon points="340,150 362,80 384,150" fill="#151b24"/></svg>`;
+  $('#mid').style.backgroundImage=svgURL(mid);
+  const items=['Паллеты','Сборные грузы','Рефрижераторы','Негабарит','Опасные грузы ADR','Контейнеры','Экспресс 24 ч','Страхование груза'];
+  $('#marq').innerHTML=[...items,...items].map(t=>`<span>${t}</span>`).join('');
+  const h=$('#heroTitle');let i=0;
+  h.innerHTML=h.innerHTML.replace(/(<em>|<\/em>)|([^<\s]+)/g,(m,tag,word)=>tag?tag:`<span style="animation-delay:${(i++)*0.09}s">${word}</span>`);
+})();
+
+/* ---------- drag-to-launch ---------- */
+const stage=$('#stage'),truck=$('#truck'),hint=$('#hint'),railFill=$('#railFill'),pct=$('#pushPct');
+const far=$('#far'),mid=$('#mid'),dashes=$('#dashes'),depot=$('#depot'),done=$('#done');
+truck.innerHTML=truckSVG();
+const tsvg=truck.querySelector('svg'),VB=tsvg.viewBox.baseVal,lx=v=>(v-VB.x)*scale;
+let state='idle',p=0,x=0,world=0,v=0,rot=0,km=0,phaseT=0,last=0,spawnT=0;
+let W,TW,scale,x0,thr;
+const VMAX=900,ACC=520,R=16;
+function layout(){W=stage.clientWidth;TW=truck.offsetWidth;scale=TW/VB.width;x0=Math.max(12,W*.04);thr=Math.max(80,(W-TW-x0)*.32);if(state==='idle')x=x0+p;render()}
+function render(){
+  truck.style.transform=`translateX(${x}px)`;
+  tsvg.style.setProperty('--rot',rot+'deg');
+  far.style.backgroundPositionX=(-world*.08)+'px';
+  mid.style.backgroundPositionX=(-world*.4)+'px';
+  dashes.style.backgroundPositionX=(-world)+'px';
+  depot.style.transform=`translateX(${-world}px)`;
+  $('#hudSpeed').textContent=Math.round(v/VMAX*90)+' км/ч';
+  $('#hudKm').textContent=km.toFixed(1).replace('.',',')+' км';
+}
+function setPush(f){const v=Math.min(1,f);railFill.style.width=v*100+'%';pct.textContent=Math.round(v*100)+'%'}
+const wheelRot=d=>d/(2*Math.PI*R*scale)*360;
+
+let startX=0,moved=0,dragging=false;
+truck.addEventListener('pointerdown',e=>{
+  if(state!=='idle')return;
+  dragging=true;moved=0;startX=e.clientX-p;truck.setPointerCapture(e.pointerId);
+});
+truck.addEventListener('pointermove',e=>{
+  if(!dragging||state!=='idle')return;
+  const np=Math.max(0,Math.min(e.clientX-startX,thr*1.05));
+  moved+=Math.abs(np-p);rot+=wheelRot(np-p);p=np;x=x0+p;setPush(p/thr);render();
+  if(p>=thr){dragging=false;try{truck.releasePointerCapture(e.pointerId)}catch(_){}launch()}
+});
+function release(){
+  if(!dragging)return;dragging=false;
+  if(state!=='idle')return;
+  if(moved<4){hint.classList.remove('wiggle');void hint.offsetWidth;hint.classList.add('wiggle');}
+  springBack();
+}
+truck.addEventListener('pointerup',release);
+truck.addEventListener('pointercancel',release);
+truck.addEventListener('keydown',e=>{
+  if(state!=='idle')return;
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter'){e.preventDefault();const d=thr/5;p+=d;rot+=wheelRot(d);x=x0+p;setPush(p/thr);render();if(p>=thr)launch();}
+});
+function springBack(){
+  const from=p,t0=performance.now();
+  (function f(now){const k=Math.min(1,(now-t0)/600),e=1-Math.pow(1-k,3)*Math.cos(k*4);
+    const np=from*(1-Math.min(1,e));rot+=wheelRot(np-p);p=np;x=x0+p;setPush(p/thr);render();
+    if(k<1&&state==='idle'&&!dragging)requestAnimationFrame(f);})(t0);
+}
+function spawn(cls,px,py){
+  const d=document.createElement('div');d.className=cls;d.style.left=px+'px';d.style.top=py+'px';
+  if(cls==='puff')d.style.background=`hsl(215 8% ${55+Math.random()*25}%)`;
+  d.addEventListener('animationend',()=>d.remove());stage.appendChild(d);
+}
+function truckTop(){return stage.clientHeight-28-truck.offsetHeight}
+function launch(){
+  state='ignite';phaseT=0;spawnT=0;last=performance.now();
+  hint.classList.add('gone');truck.classList.add('on','shake');setPush(1);
+  requestAnimationFrame(tick);
+}
+function tick(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;phaseT+=dt;spawnT+=dt;
+  const ex=x+lx(238),ey=truckTop()-4*scale;
+  if(state==='ignite'){
+    if(spawnT>.07){spawnT=0;spawn('puff',ex,ey)}
+    if(phaseT>.8){state='drive';phaseT=0;truck.classList.remove('shake');truck.classList.add('drive')}
+  }else if(state==='drive'){
+    v=Math.min(VMAX,v+ACC*dt);
+    const tx=W/2-TW/2;x+=(tx-x)*Math.min(1,dt*1.2);world+=v*dt;
+    if(spawnT>(phaseT<1.5?.12:.07)){spawnT=0;
+      if(phaseT<1.5)spawn('puff',ex,ey);
+      if(v>250)spawn('dust',x+lx(36),truckTop()+112*scale);}
+    if(phaseT>4.5){state='leave';phaseT=0}
+  }else if(state==='leave'){
+    const dx=(200+phaseT*900)*dt;x+=dx;rot+=wheelRot(dx);world+=v*dt;
+    if(spawnT>.06&&x<W){spawnT=0;spawn('dust',x+lx(36),truckTop()+112*scale)}
+    if(x>W+60){state='coast';truck.classList.remove('drive')}
+  }else if(state==='coast'){
+    v*=1-dt*2.2;world+=v*dt;
+    if(v<8){v=0;state='done';done.hidden=false;$('#again').focus({preventScroll:true})}
+  }
+  if(state!=='coast')rot+=wheelRot(v*dt);
+  km+=v*dt/260;render();
+  if(state!=='done')requestAnimationFrame(tick);
+}
+$('#again').addEventListener('click',()=>{
+  done.hidden=true;world=0;v=0;p=0;state='enter';setPush(0);
+  const from=-TW-40,t0=performance.now();x=from;
+  (function f(now){const k=Math.min(1,(now-t0)/1600),e=1-Math.pow(1-k,3),nx=from+(x0-from)*e;
+    rot+=wheelRot(nx-x);x=nx;render();
+    if(k<1)requestAnimationFrame(f);else{state='idle';truck.classList.remove('on');hint.classList.remove('gone');truck.focus({preventScroll:true})}})(t0);
+  truck.classList.add('on');
+});
+addEventListener('resize',layout);
+layout();
+document.fonts&&document.fonts.ready.then(layout);
+
+/* ---------- scroll progress & steps ---------- */
+const progFill=$('#progFill'),progDot=$('#progDot'),steps=[...document.querySelectorAll('.step')],stepFill=$('#stepFill'),stepsBox=$('#steps');
+function onScroll(){
+  const h=document.documentElement.scrollHeight-innerHeight,f=h>0?scrollY/h:0;
+  progFill.style.width=f*100+'%';progDot.style.left=f*100+'%';
+  const r=stepsBox.getBoundingClientRect(),sp=Math.max(0,Math.min(1,(innerHeight*.75-r.top)/(r.height+innerHeight*.2)));
+  stepFill.style.width=sp*100+'%';
+  steps.forEach((s,i)=>s.classList.toggle('on',sp>=i/(steps.length-1)-.02&&sp>0));
+}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+/* ---------- counters & map draw ---------- */
+const io=new IntersectionObserver(es=>es.forEach(en=>{
+  if(!en.isIntersecting)return;const el=en.target;io.unobserve(el);
+  if(el.id==='map'){requestAnimationFrame(()=>el.classList.remove('pre'));return}
+  const to=+el.dataset.to,dec=+(el.dataset.dec||0),suf=el.dataset.suf||'',t0=performance.now(),D=reduce?1:1600;
+  (function f(now){const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,4);
+    el.textContent=(to*e).toLocaleString('ru-RU',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf;
+    if(k<1)requestAnimationFrame(f)})(t0);
+}),{threshold:.35});
+document.querySelectorAll('.stat b').forEach(b=>io.observe(b));
+const mapEl=$('#map');
+if(mapEl.getBoundingClientRect().top<innerHeight)mapEl.classList.remove('pre');else io.observe(mapEl);
+
+/* ---------- map cities ---------- */
+const cities=[['Москва',60,190,'0'],['Казань',240,160,'820 км'],['Екатеринбург',430,120,'1 790 км'],['Тюмень',510,140,'2 120 км'],['Омск',620,150,'2 750 км'],['Новосибирск',760,180,'3 380 км']];
+let g='';for(let i=1;i<20;i++)g+=`<line x1="${i*41}" y1="0" x2="${i*41}" y2="300"/>`;for(let i=1;i<8;i++)g+=`<line x1="0" y1="${i*37}" x2="820" y2="${i*37}"/>`;
+$('#grid').innerHTML=g;
+$('#cities').innerHTML=cities.map(([n,cx,cy,k],i)=>`<g class="city"><circle class="pulse" cx="${cx}" cy="${cy}" r="6" style="animation-delay:${i*.4}s"/><circle class="dot" cx="${cx}" cy="${cy}" r="5"/>
+  <text x="${cx}" y="${cy+(i%2?-18:28)}" text-anchor="middle">${n}</text><text class="km" x="${cx}" y="${cy+(i%2?-34:44)}" text-anchor="middle">${k}</text></g>`).join('');
+
+/* ---------- tracking ---------- */
+const route=[
+ ['14 окт, 09:20','Принят на складе','Москва, Склад №3',0],
+ ['14 окт, 13:05','Погружен, пломба 0042117','Москва, окно 12',8],
+ ['15 окт, 02:40','В пути','Казань, трасса М-7',25],
+ ['16 окт, 06:15','В пути','Екатеринбург, М-5',53],
+ ['16 окт, 19:30','В пути','Тюмень, Р-402',63],
+ ['17 окт, 11:50','В пути','Омск, Р-254',81],
+ ['18 окт, 08:10','Доставлен','Новосибирск, терминал «Восток»',100]];
+const trip=$('#trip'),log=$('#log'),tripFill=$('#tripFill'),tripTruck=$('#tripTruck');
+tripTruck.innerHTML=truckSVG({tw:226});
+let timer=null;
+function showUpTo(n){
+  log.innerHTML=route.slice(0,n+1).map(([t,s,pl],i)=>`<li class="${i===route.length-1?'ok':''}"><time>${t}</time><div><b>${s}</b><small>${pl}</small></div></li>`).join('');
+  const pc=route[n][3];tripFill.style.width=pc+'%';tripTruck.style.left=pc+'%';
+}
+showUpTo(3);
+$('#trackForm').addEventListener('submit',e=>{
+  e.preventDefault();const val=$('#trackInput').value.trim();
+  if(!/^[A-ZА-ЯЁ]{2}-?\d{3,6}(-?\d{2})?$/i.test(val)){$('#trackErr').textContent='Номер не найден. Формат: две буквы и цифры, например ТР-4821-77.';return}
+  $('#trackErr').textContent='';clearTimeout(timer);
+  let n=0;log.innerHTML='';tripFill.style.transition='none';tripTruck.style.transition='none';showUpTo(0);
+  void tripFill.offsetWidth;tripFill.style.transition='';tripTruck.style.transition='';
+  trip.classList.add('moving');
+  (function step(){if(++n<route.length){showUpTo(n);timer=setTimeout(step,reduce?50:900)}else trip.classList.remove('moving')})();
+});
+
+/* ---------- fleet ---------- */
+const fleet=[
+ {name:'Тент 20 т',svg:{},rows:[['Объём','82 м³'],['Палет','33'],['Длина кузова','13,6 м'],['Загрузка','боковая, верхняя']]},
+ {name:'Рефрижератор 18 т',svg:{cab:'#86bbdc',label:'ХОЛОД',sub:'−25…+25 °C',ref:true},rows:[['Объём','76 м³'],['Палет','33'],['Температура','−25…+25 °C'],['Термописец','да']]},
+ {name:'Фургон 1,5 т',svg:{cab:'#ff5a3c',tw:110,label:'ТРАКТ',sub:'город'},rows:[['Объём','9 м³'],['Палет','4'],['Длина кузова','3,1 м'],['Въезд в центр','без пропуска']]}];
+$('#fleet').innerHTML=fleet.map(f=>`<article class="card" tabindex="0"><div class="pic">${truckSVG(f.svg)}</div><h3>${f.name}</h3><dl>${f.rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></article>`).join('');
+
+/* ---------- highway cars ---------- */
+const colors=['#ffb21a','#ff5a3c','#86bbdc','#e8ecef','#4fd18b','#9aa4b1'];
+let cars='';
+for(let i=0;i<7;i++){const c=colors[i%colors.length],big=i%3===0,d=6+((i*37)%9),lane=i%2?'bot':'top';
+  const s=big?`<svg width="110" height="24" viewBox="0 0 110 24"><rect x="0" y="0" width="76" height="18" fill="#e8ecef"/><rect x="78" y="4" width="24" height="14" rx="2" fill="${c}"/><rect x="100" y="12" width="6" height="4" fill="#fff6d0"/><circle cx="14" cy="20" r="4"/><circle cx="60" cy="20" r="4"/><circle cx="92" cy="20" r="4"/></svg>`
+   :`<svg width="56" height="22" viewBox="0 0 56 22"><path d="M2 16 V10 L12 8 L20 2 H38 L46 8 L54 10 V16 Z" fill="${c}"/><path d="M22 4 H36 L42 8 H16 Z" fill="#86bbdc" opacity=".7"/><rect x="50" y="10" width="5" height="3" fill="#fff6d0"/><circle cx="14" cy="17" r="4"/><circle cx="42" cy="17" r="4"/></svg>`;
+  cars+=`<div class="car ${lane}" style="animation-duration:${d}s;animation-delay:${-i*1.7}s">${s}</div>`;}
+$('#highway').insertAdjacentHTML('beforeend',cars);
+})();
+</script>
+
+</body>
+</html>
